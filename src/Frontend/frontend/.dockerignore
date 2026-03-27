@@ -1,0 +1,11 @@
+.git
+.gitignore
+.next
+node_modules
+coverage
+test-results
+playwright-report
+.vscode
+*.log
+Dockerfile*
+README.md

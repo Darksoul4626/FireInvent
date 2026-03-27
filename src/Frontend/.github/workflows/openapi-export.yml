@@ -1,0 +1,47 @@
+name: OpenAPI Export Check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  export-openapi:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore backend
+        run: dotnet restore src/FireInvent.Api/FireInvent.Api.csproj
+
+      - name: Export OpenAPI document
+        run: |
+          chmod +x scripts/export-openapi.sh
+          ./scripts/export-openapi.sh
+
+      - name: Verify OpenAPI output exists
+        run: test -s openapi/openapi.v1.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Verify frontend API client contract sync
+        working-directory: frontend
+        run: npm run check:api-contract-sync

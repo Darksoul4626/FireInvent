@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0F9113EE-888A-26D2-68B0-4A7D0A2A8745}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FireInvent.Api", "backend\src\FireInvent.Api\FireInvent.Api.csproj", "{0C2118A7-57F7-FEEE-F193-93B8D11A18FA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F57642F3-C37C-D174-720E-6A6AAD5BEE22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FireInvent.Api.Tests", "backend\tests\FireInvent.Api.Tests\FireInvent.Api.Tests.csproj", "{7AA79F59-12BB-8F3E-2DF4-1471BA21E212}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0C2118A7-57F7-FEEE-F193-93B8D11A18FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C2118A7-57F7-FEEE-F193-93B8D11A18FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C2118A7-57F7-FEEE-F193-93B8D11A18FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C2118A7-57F7-FEEE-F193-93B8D11A18FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AA79F59-12BB-8F3E-2DF4-1471BA21E212}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AA79F59-12BB-8F3E-2DF4-1471BA21E212}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AA79F59-12BB-8F3E-2DF4-1471BA21E212}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AA79F59-12BB-8F3E-2DF4-1471BA21E212}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0F9113EE-888A-26D2-68B0-4A7D0A2A8745} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
+		{0C2118A7-57F7-FEEE-F193-93B8D11A18FA} = {0F9113EE-888A-26D2-68B0-4A7D0A2A8745}
+		{F57642F3-C37C-D174-720E-6A6AAD5BEE22} = {1AE8ACA6-933B-BF2A-3671-3E2EAC007D16}
+		{7AA79F59-12BB-8F3E-2DF4-1471BA21E212} = {F57642F3-C37C-D174-720E-6A6AAD5BEE22}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C95487FC-5762-4A6C-A9DA-2ADF35026742}
+	EndGlobalSection
+EndGlobal

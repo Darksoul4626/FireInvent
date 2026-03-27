@@ -1,0 +1,35 @@
+schema: spec-driven
+
+context: |
+  Product: FireInvent (webbasierte Inventar- und Vermietungsverwaltung fuer Feuerwehr).
+  Frontend: Next.js App Router (TypeScript), generated OpenAPI client, React Hook Form, Zod.
+  Backend: ASP.NET Core .NET 10, EF Core (Npgsql), FluentValidation, Swagger/OpenAPI.
+  Database: PostgreSQL, migrations via EF Core.
+  Tests: xUnit (backend), Vitest (frontend unit), Playwright (e2e).
+  Deployment model: Separate frontend/backend/db containers with docker-compose.
+
+  Key conventions:
+  - API-first workflow: backend OpenAPI is source of truth; frontend client is generated.
+  - Layered backend architecture: Controllers -> Services -> Repositories.
+  - Controllers must not use DbContext directly.
+  - Validation and errors should use consistent ProblemDetails-style responses.
+  - Prefer deterministic seed/test data for pilot validation.
+  - Keep security/authorization work isolated in dedicated changes unless explicitly requested.
+
+rules:
+  proposal:
+    - Describe operational value for Feuerwehr inventory and rental workflows.
+    - Include clear non-goals, risks, and rollout impact.
+    - Name affected capabilities explicitly.
+  design:
+    - Define domain model and lifecycle impact for inventory, rentals, and availability.
+    - Document API contract impact and OpenAPI client regeneration implications.
+    - Include migration and rollback strategy for data model changes.
+  specs:
+    - Write testable behavior using explicit WHEN/THEN scenarios.
+    - Keep requirements implementation-agnostic and avoid framework-specific wording.
+    - Include failure/conflict scenarios for stock and booking overlaps where relevant.
+  tasks:
+    - Break work into small, verifiable steps with clear done criteria.
+    - Include validation steps for relevant areas (backend tests, frontend tests/build, contract sync).
+    - Keep deferred topics in separate follow-up changes rather than leaving hidden scope in active tasks.

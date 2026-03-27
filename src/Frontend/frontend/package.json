@@ -1,0 +1,42 @@
+{
+    "name": "fireinvent-frontend",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint",
+        "test": "vitest run",
+        "test:unit": "vitest run",
+        "test:e2e": "playwright test",
+        "generate:api-client": "node ./scripts/generate-api-client.mjs",
+        "check:api-contract-sync": "node ./scripts/check-api-contract-sync.mjs"
+    },
+    "dependencies": {
+        "@fullcalendar/daygrid": "^6.1.15",
+        "@fullcalendar/interaction": "^6.1.15",
+        "@fullcalendar/react": "^6.1.15",
+        "@fullcalendar/timegrid": "^6.1.15",
+        "@tanstack/react-query": "^5.66.11",
+        "axios": "^1.8.2",
+        "next": "16.2.1",
+        "react": "^19.2.4",
+        "react-dom": "^19.2.4",
+        "react-hook-form": "^7.54.2",
+        "zod": "^3.24.2"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.55.0",
+        "@testing-library/jest-dom": "^6.8.0",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.6.1",
+        "@types/node": "^22.13.5",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "jsdom": "^26.1.0",
+        "openapi-typescript-codegen": "^0.29.0",
+        "typescript": "^5.8.2",
+        "vitest": "^3.0.6"
+    }
+}

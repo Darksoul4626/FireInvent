@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { InventoryItemForm } from "@/components/inventory-item-form";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInventoryItem } from "@/lib/api/fireinvent-api";
 
@@ -20,11 +22,14 @@ export default async function EditInventoryItemPage({ params }: Props) {
 
     return (
         <section className="grid max-w-3xl gap-4">
-            <p className="m-0">
-                <Link className="text-red-700 hover:underline dark:text-red-400" href={`/inventory/${id}`}>
-                    Zurueck zur Detailansicht
-                </Link>
-            </p>
+            <div>
+                <Button asChild variant="secondary" size="sm">
+                    <Link href={`/inventory/${id}`}>
+                        <ArrowLeft className="h-4 w-4" />
+                        Zurueck zur Detailansicht
+                    </Link>
+                </Button>
+            </div>
             <Card>
                 <CardHeader>
                     <CardTitle>Gegenstand bearbeiten</CardTitle>

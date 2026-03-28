@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2, Plus, Save } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -196,6 +197,7 @@ export function InventoryItemForm({ mode, itemId, initialValues }: Readonly<Prop
             ) : null}
 
             <Button data-testid="inventory-submit-button" type="submit" disabled={isSubmitting} className="w-fit">
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "create" ? <Plus className="h-4 w-4" /> : <Save className="h-4 w-4" />}
                 {submitLabel}
             </Button>
         </form>

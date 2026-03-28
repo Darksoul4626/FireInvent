@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Flame, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { CalendarDays, Flame, Home, Menu, Package, PanelLeftClose, PanelLeftOpen, ReceiptText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-    { href: "/", label: "Start" },
-    { href: "/inventory", label: "Inventar" },
-    { href: "/rentals", label: "Vermietungen" },
-    { href: "/calendar", label: "Kalender" }
+    { href: "/", label: "Start", icon: Home },
+    { href: "/inventory", label: "Inventar", icon: Package },
+    { href: "/rentals", label: "Vermietungen", icon: ReceiptText },
+    { href: "/calendar", label: "Kalender", icon: CalendarDays }
 ] as const;
 
 type Props = {
@@ -70,17 +70,21 @@ export function AppShell({ children }: Readonly<Props>) {
                     <nav data-testid="main-navigation" className="grid gap-2" aria-label="Hauptnavigation">
                         {NAV_ITEMS.map((item) => {
                             const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+                            const Icon = item.icon;
                             return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
                                     data-active={active}
+                                    aria-label={item.label}
+                                    title={collapsed ? item.label : undefined}
                                     className={cn(
-                                        "fi-sidebar-link rounded-md border border-transparent px-3 py-2 text-sm font-medium transition-colors",
-                                        collapsed ? "text-center" : ""
+                                        "fi-sidebar-link flex items-center rounded-md border border-transparent px-3 py-2 text-sm font-medium transition-colors",
+                                        collapsed ? "justify-center" : "gap-2"
                                     )}
                                 >
-                                    {collapsed ? item.label.slice(0, 2) : item.label}
+                                    <Icon className="h-4 w-4 shrink-0" />
+                                    {collapsed ? <span className="sr-only">{item.label}</span> : <span>{item.label}</span>}
                                 </Link>
                             );
                         })}
@@ -106,15 +110,17 @@ export function AppShell({ children }: Readonly<Props>) {
                                     <nav data-testid="main-navigation" className="grid gap-2" aria-label="Mobile Hauptnavigation">
                                         {NAV_ITEMS.map((item) => {
                                             const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+                                            const Icon = item.icon;
                                             return (
                                                 <Link
                                                     key={item.href}
                                                     href={item.href}
                                                     onClick={() => setMobileOpen(false)}
                                                     data-active={active}
-                                                    className="fi-sidebar-link rounded-md border border-transparent px-3 py-2 text-sm font-medium"
+                                                    className="fi-sidebar-link flex items-center gap-2 rounded-md border border-transparent px-3 py-2 text-sm font-medium"
                                                 >
-                                                    {item.label}
+                                                    <Icon className="h-4 w-4 shrink-0" />
+                                                    <span>{item.label}</span>
                                                 </Link>
                                             );
                                         })}

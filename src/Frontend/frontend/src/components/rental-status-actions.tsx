@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { CSSProperties } from "react";
+import { Button } from "@/components/ui/button";
 import { parseApiError } from "@/lib/api/api-error";
 
 type Props = {
@@ -39,28 +39,20 @@ export function RentalStatusActions({ rentalId, status }: Props) {
     }
 
     if (!canMutate) {
-        return <span style={{ color: "#6b7280" }}>-</span>;
+        return <span className="text-slate-500 dark:text-slate-400">-</span>;
     }
 
     return (
-        <div style={{ display: "grid", gap: 6 }}>
-            <div style={{ display: "flex", gap: 8 }}>
-                <button style={smallButton} disabled={loading !== null} onClick={() => run("cancel")} type="button">
+        <div className="grid gap-2">
+            <div className="flex gap-2">
+                <Button variant="outline" size="sm" disabled={loading !== null} onClick={() => run("cancel")} type="button">
                     {loading === "cancel" ? "..." : "Cancel"}
-                </button>
-                <button style={smallButton} disabled={loading !== null} onClick={() => run("complete")} type="button">
+                </Button>
+                <Button variant="outline" size="sm" disabled={loading !== null} onClick={() => run("complete")} type="button">
                     {loading === "complete" ? "..." : "Complete"}
-                </button>
+                </Button>
             </div>
-            {error ? <span style={{ color: "#b91c1c", fontSize: 12 }}>{error}</span> : null}
+            {error ? <span className="text-xs text-red-700 dark:text-red-400">{error}</span> : null}
         </div>
     );
 }
-
-const smallButton: CSSProperties = {
-    border: "1px solid #d1d5db",
-    borderRadius: 6,
-    background: "#ffffff",
-    padding: "4px 8px",
-    cursor: "pointer"
-};

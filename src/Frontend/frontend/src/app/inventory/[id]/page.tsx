@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { CSSProperties } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInventoryItem, getItemAvailability } from "@/lib/api/fireinvent-api";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ type Props = {
     params: Promise<{ id: string }>;
 };
 
-export default async function InventoryDetailPage({ params }: Props) {
+export default async function InventoryDetailPage({ params }: Readonly<Props>) {
     const { id } = await params;
 
     let item;
@@ -22,65 +22,64 @@ export default async function InventoryDetailPage({ params }: Props) {
     const availability = await getItemAvailability(id, new Date());
 
     return (
-        <main style={{ padding: 24, fontFamily: "ui-sans-serif, system-ui", maxWidth: 900 }}>
-            <p>
-                <Link href="/inventory">Zurueck zur Inventarliste</Link>
-            </p>
-            <p>
-                <Link href={`/inventory/${id}/edit`}>Diesen Gegenstand bearbeiten</Link>
-            </p>
-            <p>
-                <Link href={`/calendar?itemId=${id}`}>Diesen Gegenstand im Kalender anzeigen</Link>
-            </p>
+        <section className="grid max-w-4xl gap-4">
+            <div className="grid gap-1 text-sm">
+                <Link className="text-red-700 hover:underline dark:text-red-400" href="/inventory">
+                    Zurueck zur Inventarliste
+                </Link>
+                <Link className="text-red-700 hover:underline dark:text-red-400" href={`/inventory/${id}/edit`}>
+                    Diesen Gegenstand bearbeiten
+                </Link>
+                <Link className="text-red-700 hover:underline dark:text-red-400" href={`/calendar?itemId=${id}`}>
+                    Diesen Gegenstand im Kalender anzeigen
+                </Link>
+            </div>
 
-            <h1 data-testid="inventory-detail-name" style={{ marginBottom: 6 }}>{item.name}</h1>
-            <p style={{ marginTop: 0, color: "#4b5563" }}>Code: {item.inventoryCode}</p>
+            <div className="grid gap-1">
+                <h1 data-testid="inventory-detail-name" className="text-2xl font-bold">{item.name}</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-300">Code: {item.inventoryCode}</p>
+            </div>
 
-            <section style={panel}>
-                <h2 style={sectionTitle}>Stammdaten</h2>
-                <dl style={{ margin: 0 }}>
-                    <Row label="Kategorie" value={item.category} />
-                    <Row label="Zustand" value={item.condition} />
-                    <Row label="Ort" value={item.location} />
-                </dl>
-            </section>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Stammdaten</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <dl className="m-0 grid gap-2">
+                        <Row label="Kategorie" value={item.category} />
+                        <Row label="Zustand" value={item.condition} />
+                        <Row label="Ort" value={item.location} />
+                    </dl>
+                </CardContent>
+            </Card>
 
-            <section style={panel}>
-                <h2 style={sectionTitle}>Aktueller Bestand</h2>
-                <dl style={{ margin: 0 }}>
-                    <Row label="Gesamtbestand" value={String(availability.totalQuantity)} valueTestId="availability-total" />
-                    <Row
-                        label="Vermietet/Reserviert"
-                        value={String(availability.reservedOrRentedQuantity)}
-                        valueTestId="availability-rented"
-                    />
-                    <Row label="Verfuegbar" value={String(availability.availableQuantity)} valueTestId="availability-available" />
-                </dl>
-            </section>
-        </main>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Aktueller Bestand</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <dl className="m-0 grid gap-2">
+                        <Row label="Gesamtbestand" value={String(availability.totalQuantity)} valueTestId="availability-total" />
+                        <Row
+                            label="Vermietet/Reserviert"
+                            value={String(availability.reservedOrRentedQuantity)}
+                            valueTestId="availability-rented"
+                        />
+                        <Row label="Verfuegbar" value={String(availability.availableQuantity)} valueTestId="availability-available" />
+                    </dl>
+                </CardContent>
+            </Card>
+        </section>
     );
 }
 
-function Row({ label, value, valueTestId }: { label: string; value: string; valueTestId?: string }) {
+function Row({ label, value, valueTestId }: Readonly<{ label: string; value: string; valueTestId?: string }>) {
     return (
-        <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 8, padding: "6px 0" }}>
-            <dt style={{ color: "#4b5563" }}>{label}</dt>
-            <dd data-testid={valueTestId} style={{ margin: 0 }}>
+        <div className="grid grid-cols-1 gap-1 border-b border-[var(--border)] py-1 sm:grid-cols-[220px_1fr]">
+            <dt className="text-sm text-slate-600 dark:text-slate-300">{label}</dt>
+            <dd data-testid={valueTestId} className="m-0 font-medium">
                 {value}
             </dd>
         </div>
     );
 }
-
-const panel: CSSProperties = {
-    border: "1px solid #e5e7eb",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 14
-};
-
-const sectionTitle: CSSProperties = {
-    marginTop: 0,
-    marginBottom: 10,
-    fontSize: 18
-};

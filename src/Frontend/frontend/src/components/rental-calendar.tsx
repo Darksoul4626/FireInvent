@@ -5,7 +5,11 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { CSSProperties } from "react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const denseThreshold = 30;
 
@@ -38,7 +42,7 @@ const statusColor: Record<CalendarRental["status"], string> = {
 
 const conflictColor = "#dc2626";
 
-export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Props) {
+export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonly<Props>) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -51,6 +55,32 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Props) 
 
     const isDense = filteredRentals.length >= denseThreshold;
     const effectiveView = !hasExplicitView && isDense ? "table" : selectedView;
+    const [isMobile, setIsMobile] = useState(false);
+    const resolvedView = isMobile ? "calendar" : effectiveView;
+    const viewLabel = resolvedView === "calendar" ? "Kalender" : "Tabelle";
+
+    const viewSummary = isDense && !hasExplicitView
+        ? `Dichter Zeitraum erkannt (${filteredRentals.length} Eintraege), Tabellenansicht als Fallback aktiv.`
+        : `Ansicht: ${viewLabel}`;
+
+    useEffect(() => {
+        if (typeof globalThis.matchMedia !== "function") {
+            return;
+        }
+
+        const query = globalThis.matchMedia("(max-width: 767px)");
+
+        const update = () => {
+            setIsMobile(query.matches);
+        };
+
+        update();
+        query.addEventListener("change", update);
+
+        return () => {
+            query.removeEventListener("change", update);
+        };
+    }, []);
 
     const visibleEvents = filteredRentals.map((rental) => ({
         id: rental.id,
@@ -91,20 +121,14 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Props) 
     }
 
     return (
-        <section data-testid="rental-calendar-root" style={{ display: "grid", gap: 12 }}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "end" }}>
-                <label style={{ display: "grid", gap: 6, minWidth: 260, maxWidth: 420, fontWeight: 600 }}>
+        <section data-testid="rental-calendar-root" className="grid gap-4">
+            <div className="flex flex-wrap items-end gap-3">
+                <label className="grid min-w-60 max-w-105 gap-2 text-sm font-semibold">
                     Gegenstand filtern
-                    <select
+                    <Select
                         data-testid="calendar-item-filter"
                         value={selectedItemId ?? ""}
                         onChange={(event) => onFilterChange(event.target.value)}
-                        style={{
-                            border: "1px solid #d1d5db",
-                            borderRadius: 6,
-                            padding: "8px 10px",
-                            font: "inherit"
-                        }}
                     >
                         <option value="">Alle Gegenstaende</option>
                         {itemOptions.map((item) => (
@@ -112,48 +136,41 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Props) 
                                 {item.label}
                             </option>
                         ))}
-                    </select>
+                    </Select>
                 </label>
 
-                <div style={{ display: "flex", gap: 8 }}>
-                    <button
+                <div className="flex gap-2">
+                    <Button
                         data-testid="calendar-view-calendar"
                         type="button"
                         onClick={() => onViewChange("calendar")}
-                        style={effectiveView === "calendar" ? activeToggleButton : toggleButton}
+                        variant={effectiveView === "calendar" ? "default" : "outline"}
                     >
                         Kalender
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         data-testid="calendar-view-table"
                         type="button"
                         onClick={() => onViewChange("table")}
-                        style={effectiveView === "table" ? activeToggleButton : toggleButton}
+                        variant={effectiveView === "table" ? "default" : "outline"}
+                        className="hidden sm:inline-flex"
                     >
                         Tabelle
-                    </button>
+                    </Button>
                 </div>
             </div>
 
-            <label data-testid="calendar-view-summary" style={{ display: "grid", gap: 6, maxWidth: 420, fontWeight: 600 }}>
-                {isDense && !hasExplicitView
-                    ? `Dichter Zeitraum erkannt (${filteredRentals.length} Eintraege), Tabellenansicht als Fallback aktiv.`
-                    : `Ansicht: ${effectiveView === "calendar" ? "Kalender" : "Tabelle"}`}
+            <label data-testid="calendar-view-summary" className="grid max-w-120 gap-1 text-sm font-semibold">
+                {viewSummary}
             </label>
 
-            <div style={{ display: "flex", gap: 16, fontSize: 14, color: "#374151" }}>
-                <span>
-                    <strong style={{ color: statusColor.Planned }}>Planned</strong>: geplant
-                </span>
-                <span>
-                    <strong style={{ color: statusColor.Active }}>Active</strong>: aktiv ausgeliehen
-                </span>
-                <span>
-                    <strong style={{ color: conflictColor }}>Conflict</strong>: ueberbucht
-                </span>
+            <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="secondary" className="fi-status-planned">Planned: geplant</Badge>
+                <Badge variant="secondary" className="fi-status-active">Active: aktiv ausgeliehen</Badge>
+                <Badge variant="secondary" className="fi-status-conflict">Conflict: ueberbucht</Badge>
             </div>
 
-            {effectiveView === "calendar" ? (
+            {resolvedView === "calendar" ? (
                 <FullCalendar
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                     initialView="dayGridMonth"
@@ -171,45 +188,63 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Props) 
                     }}
                 />
             ) : (
-                <div style={{ overflowX: "auto" }}>
-                    <table data-testid="calendar-table" style={{ borderCollapse: "collapse", width: "100%", minWidth: 820 }}>
-                        <thead>
-                            <tr style={{ background: "#f3f4f6" }}>
-                                <th style={tableHeader}>Gegenstand</th>
-                                <th style={tableHeader}>Start</th>
-                                <th style={tableHeader}>Ende</th>
-                                <th style={tableHeader}>Menge</th>
-                                <th style={tableHeader}>Status</th>
-                                <th style={tableHeader}>Konflikt</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tableRows.map((rental) => (
-                                <tr
-                                    key={rental.id}
-                                    data-testid={`calendar-table-row-${rental.id}`}
-                                    style={rental.isConflict ? conflictRowStyle : undefined}
-                                >
-                                    <td style={tableCell}>{rental.itemLabel}</td>
-                                    <td style={tableCell}>{formatDateTime(rental.startDate)}</td>
-                                    <td style={tableCell}>{formatDateTime(rental.endDate)}</td>
-                                    <td style={tableCell}>{rental.quantity}</td>
-                                    <td style={tableCell}>{rental.status}</td>
-                                    <td style={tableCell}>{rental.isConflict ? "Ja" : "Nein"}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <>
+                    <div className="grid gap-2 sm:hidden">
+                        {tableRows.map((rental) => (
+                            <article key={rental.id} className="fi-mobile-list-card grid gap-1" data-testid={`calendar-mobile-row-${rental.id}`}>
+                                <h3 className="text-sm font-semibold">{rental.itemLabel}</h3>
+                                <p className="text-xs text-slate-600 dark:text-slate-300">
+                                    {formatDateTime(rental.startDate)} - {formatDateTime(rental.endDate)}
+                                </p>
+                                <div className="flex items-center justify-between text-xs">
+                                    <span>Menge: {rental.quantity}</span>
+                                    <span>{rental.status}</span>
+                                </div>
+                                <p className="text-xs font-medium">Konflikt: {rental.isConflict ? "Ja" : "Nein"}</p>
+                            </article>
+                        ))}
+                    </div>
+
+                    <div className="hidden sm:block">
+                        <Table data-testid="calendar-table" className="min-w-[48rem] lg:min-w-[54rem]">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Gegenstand</TableHead>
+                                    <TableHead>Start</TableHead>
+                                    <TableHead>Ende</TableHead>
+                                    <TableHead>Menge</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Konflikt</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {tableRows.map((rental) => (
+                                    <TableRow
+                                        key={rental.id}
+                                        data-testid={`calendar-table-row-${rental.id}`}
+                                        className={rental.isConflict ? "bg-red-50 dark:bg-red-950/40" : undefined}
+                                    >
+                                        <TableCell>{rental.itemLabel}</TableCell>
+                                        <TableCell>{formatDateTime(rental.startDate)}</TableCell>
+                                        <TableCell>{formatDateTime(rental.endDate)}</TableCell>
+                                        <TableCell>{rental.quantity}</TableCell>
+                                        <TableCell>{rental.status}</TableCell>
+                                        <TableCell>{rental.isConflict ? "Ja" : "Nein"}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </>
             )}
 
-            <p data-testid="calendar-visible-count" style={{ margin: 0, color: "#4b5563", fontSize: 14 }}>
+            <p data-testid="calendar-visible-count" className="m-0 text-sm text-slate-600 dark:text-slate-300">
                 {selectedItemId
                     ? `Zeige ${visibleEvents.length} Termin(e) fuer den ausgewaehlten Gegenstand.`
                     : `Zeige ${visibleEvents.length} Termin(e) fuer alle Gegenstaende.`}
             </p>
 
-            <p style={{ margin: 0, color: conflictColor, fontSize: 13 }}>
+            <p className="m-0 text-xs text-red-700 dark:text-red-400">
                 Rot markierte Eintraege befinden sich in ueberbuchten Zeitraeumen.
             </p>
         </section>
@@ -222,36 +257,3 @@ function formatDateTime(value: string): string {
         timeStyle: "short"
     });
 }
-
-const toggleButton: CSSProperties = {
-    border: "1px solid #d1d5db",
-    borderRadius: 6,
-    padding: "8px 12px",
-    background: "#ffffff",
-    cursor: "pointer",
-    fontWeight: 600
-};
-
-const activeToggleButton: CSSProperties = {
-    ...toggleButton,
-    borderColor: "#111827",
-    background: "#111827",
-    color: "#ffffff"
-};
-
-const tableHeader: CSSProperties = {
-    textAlign: "left",
-    padding: "10px 8px",
-    borderBottom: "1px solid #d1d5db",
-    fontWeight: 600
-};
-
-const tableCell: CSSProperties = {
-    padding: "10px 8px",
-    borderBottom: "1px solid #e5e7eb",
-    verticalAlign: "top"
-};
-
-const conflictRowStyle: CSSProperties = {
-    background: "#fef2f2"
-};

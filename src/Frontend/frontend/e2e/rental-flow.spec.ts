@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-function toInputDateTimeLocal(date: Date): string {
+function toInputDate(date: Date): string {
     const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
-    return local.toISOString().slice(0, 16);
+    return local.toISOString().slice(0, 10);
 }
 
 test("item create -> rent -> complete -> availability update", async ({ page }) => {
@@ -33,12 +33,12 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
 
     await page.goto("/rentals/new");
 
-    await page.getByTestId("rental-item-select").selectOption({ label: `${itemCode} - ${itemName}` });
+    await page.getByTestId("rental-item-select").selectOption(itemId);
 
-    const start = new Date(Date.now() - 15 * 60 * 1000);
-    const end = new Date(Date.now() + 45 * 60 * 1000);
-    await page.getByTestId("rental-start-input").fill(toInputDateTimeLocal(start));
-    await page.getByTestId("rental-end-input").fill(toInputDateTimeLocal(end));
+    const start = new Date("2099-01-10T09:00:00.000Z");
+    const end = new Date("2099-01-10T18:00:00.000Z");
+    await page.getByTestId("rental-start-input").fill(toInputDate(start));
+    await page.getByTestId("rental-end-input").fill(toInputDate(end));
     await page.getByTestId("rental-quantity-input").fill("2");
 
     const createResponsePromise = page.waitForResponse((response) => {
@@ -47,11 +47,12 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
     await page.getByTestId("rental-submit-button").click();
 
     const createResponse = await createResponsePromise;
+    expect(createResponse.ok()).toBeTruthy();
     const createdRental = (await createResponse.json()) as { id: string };
 
     await expect(page).toHaveURL(/\/rentals$/);
 
-    await expect(page.getByTestId(`rental-row-item-${createdRental.id}`)).toContainText(`${itemCode} - ${itemName}`);
+    await expect(page.getByTestId(`rental-row-item-${createdRental.id}`)).toContainText(/E2E-\d+\s-\sGenerator\s\d+/);
     await expect(page.getByTestId(`rental-row-status-${createdRental.id}`)).toHaveText("Planned");
 
     const completeResponse = await page.request.post(

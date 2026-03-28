@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { InventoryItemForm } from "@/components/inventory-item-form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInventoryItem } from "@/lib/api/fireinvent-api";
 
 type Props = {
@@ -18,23 +19,32 @@ export default async function EditInventoryItemPage({ params }: Props) {
     }
 
     return (
-        <main style={{ padding: 24, fontFamily: "ui-sans-serif, system-ui", maxWidth: 860 }}>
-            <p>
-                <Link href={`/inventory/${id}`}>Zurueck zur Detailansicht</Link>
+        <section className="grid max-w-3xl gap-4">
+            <p className="m-0">
+                <Link className="text-red-700 hover:underline dark:text-red-400" href={`/inventory/${id}`}>
+                    Zurueck zur Detailansicht
+                </Link>
             </p>
-            <h1>Gegenstand bearbeiten</h1>
-            <InventoryItemForm
-                mode="edit"
-                itemId={id}
-                initialValues={{
-                    inventoryCode: item.inventoryCode,
-                    name: item.name,
-                    category: item.category,
-                    condition: item.condition,
-                    location: item.location,
-                    totalQuantity: item.totalQuantity
-                }}
-            />
-        </main>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Gegenstand bearbeiten</CardTitle>
+                    <CardDescription>Stammdaten und Menge aktualisieren.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <InventoryItemForm
+                        mode="edit"
+                        itemId={id}
+                        initialValues={{
+                            inventoryCode: item.inventoryCode,
+                            name: item.name,
+                            category: item.category,
+                            condition: item.condition,
+                            location: item.location,
+                            totalQuantity: item.totalQuantity
+                        }}
+                    />
+                </CardContent>
+            </Card>
+        </section>
     );
 }

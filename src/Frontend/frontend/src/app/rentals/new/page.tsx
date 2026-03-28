@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { RentalBookingForm } from "@/components/rental-booking-form";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInventoryItems } from "@/lib/api/fireinvent-api";
 
@@ -10,11 +12,14 @@ export default async function NewRentalPage() {
 
     return (
         <section className="grid max-w-3xl gap-4">
-            <p className="m-0">
-                <Link className="text-red-700 hover:underline dark:text-red-400" href="/rentals">
-                    Zurueck zur Vermietungsliste
-                </Link>
-            </p>
+            <div>
+                <Button asChild variant="secondary" size="sm">
+                    <Link href="/rentals">
+                        <ArrowLeft className="h-4 w-4" />
+                        Zurueck zur Vermietungsliste
+                    </Link>
+                </Button>
+            </div>
             <Card>
                 <CardHeader>
                     <CardTitle>Vermietung anlegen</CardTitle>

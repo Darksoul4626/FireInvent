@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pencil, Plus } from "lucide-react";
 import { RentalStatusActions } from "@/components/rental-status-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,10 @@ export default async function RentalsPage() {
                     </p>
                 </div>
                 <Button asChild>
-                    <Link href="/rentals/new">Neue Vermietung anlegen</Link>
+                    <Link href="/rentals/new">
+                        <Plus className="h-4 w-4" />
+                        Neue Vermietung anlegen
+                    </Link>
                 </Button>
             </div>
 
@@ -50,9 +54,12 @@ export default async function RentalsPage() {
                                         </Badge>
                                     </div>
                                     <div className="flex items-center justify-between gap-2">
-                                        <Link className="text-sm text-red-700 hover:underline dark:text-red-400" href={`/rentals/${rental.id}/edit`}>
-                                            bearbeiten
-                                        </Link>
+                                        <Button asChild variant="outline" size="sm">
+                                            <Link href={`/rentals/${rental.id}/edit`}>
+                                                <Pencil className="h-4 w-4" />
+                                                bearbeiten
+                                            </Link>
+                                        </Button>
                                         <RentalStatusActions rentalId={rental.id} status={rental.status} />
                                     </div>
                                 </article>
@@ -88,12 +95,12 @@ export default async function RentalsPage() {
                                                 <Badge variant={rental.status === "Canceled" ? "outline" : "secondary"}>{rental.status}</Badge>
                                             </TableCell>
                                             <TableCell>
-                                                <Link
-                                                    className="text-red-700 hover:underline dark:text-red-400"
-                                                    href={`/rentals/${rental.id}/edit`}
-                                                >
-                                                    bearbeiten
-                                                </Link>
+                                                <Button asChild variant="outline" size="sm">
+                                                    <Link href={`/rentals/${rental.id}/edit`}>
+                                                        <Pencil className="h-4 w-4" />
+                                                        bearbeiten
+                                                    </Link>
+                                                </Button>
                                             </TableCell>
                                             <TableCell>
                                                 <RentalStatusActions rentalId={rental.id} status={rental.status} />

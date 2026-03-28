@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -46,9 +47,11 @@ export function RentalStatusActions({ rentalId, status }: Props) {
         <div className="grid gap-2">
             <div className="flex gap-2">
                 <Button variant="outline" size="sm" disabled={loading !== null} onClick={() => run("cancel")} type="button">
+                    <X className="h-4 w-4" />
                     {loading === "cancel" ? "..." : "Cancel"}
                 </Button>
                 <Button variant="outline" size="sm" disabled={loading !== null} onClick={() => run("complete")} type="button">
+                    <Check className="h-4 w-4" />
                     {loading === "complete" ? "..." : "Complete"}
                 </Button>
             </div>

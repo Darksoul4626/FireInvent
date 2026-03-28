@@ -1,0 +1,152 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - generic [ref=e6]:
+            - img [ref=e7]
+            - generic [ref=e9]: FireInvent
+          - button "Sidenav einklappen" [ref=e10]:
+            - img [ref=e11]
+        - navigation "Hauptnavigation" [ref=e14]:
+          - link "Start" [ref=e15] [cursor=pointer]:
+            - /url: /
+          - link "Inventar" [ref=e16] [cursor=pointer]:
+            - /url: /inventory
+          - link "Vermietungen" [ref=e17] [cursor=pointer]:
+            - /url: /rentals
+          - link "Kalender" [ref=e18] [cursor=pointer]:
+            - /url: /calendar
+    - generic [ref=e19]:
+      - banner [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]:
+            - img [ref=e23]
+            - generic [ref=e25]: Feuerwehr Inventarportal
+          - button "In den Dark Mode wechseln" [ref=e26]:
+            - img [ref=e27]
+      - main [ref=e29]:
+        - generic [ref=e30]:
+          - generic [ref=e31]:
+            - generic [ref=e32]:
+              - heading "Vermietungen" [level=1] [ref=e33]
+              - paragraph [ref=e34]: Anlegen, bearbeiten und Lifecycle-Status verwalten.
+            - link "Neue Vermietung anlegen" [ref=e35] [cursor=pointer]:
+              - /url: /rentals/new
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - heading "Vermietungsuebersicht" [level=3] [ref=e38]
+              - paragraph [ref=e39]: Alle Buchungen inkl. Status und Aktionen.
+            - table [ref=e43]:
+              - rowgroup [ref=e44]:
+                - row "Gegenstand Zeitraum Menge Status Bearbeiten Lifecycle" [ref=e45]:
+                  - columnheader "Gegenstand" [ref=e46]
+                  - columnheader "Zeitraum" [ref=e47]
+                  - columnheader "Menge" [ref=e48]
+                  - columnheader "Status" [ref=e49]
+                  - columnheader "Bearbeiten" [ref=e50]
+                  - columnheader "Lifecycle" [ref=e51]
+              - rowgroup [ref=e52]:
+                - row "E2E-1774656796248 - Generator 1774656796248 25.02.26, 01:00 - 26.02.26, 00:59 1 Planned bearbeiten Cancel Complete" [ref=e53]:
+                  - cell "E2E-1774656796248 - Generator 1774656796248" [ref=e54]
+                  - cell "25.02.26, 01:00 - 26.02.26, 00:59" [ref=e55]
+                  - cell "1" [ref=e56]
+                  - cell "Planned" [ref=e57]:
+                    - generic [ref=e58]: Planned
+                  - cell "bearbeiten" [ref=e59]:
+                    - link "bearbeiten" [ref=e60] [cursor=pointer]:
+                      - /url: /rentals/dbc740d8-1541-443a-a26b-5b49cc214117/edit
+                  - cell "Cancel Complete" [ref=e61]:
+                    - generic [ref=e63]:
+                      - button "Cancel" [ref=e64]
+                      - button "Complete" [ref=e65]
+                - row "test - test 10.03.26, 01:00 - 18.03.26, 00:59 5 Canceled bearbeiten -" [ref=e66]:
+                  - cell "test - test" [ref=e67]
+                  - cell "10.03.26, 01:00 - 18.03.26, 00:59" [ref=e68]
+                  - cell "5" [ref=e69]
+                  - cell "Canceled" [ref=e70]:
+                    - generic [ref=e71]: Canceled
+                  - cell "bearbeiten" [ref=e72]:
+                    - link "bearbeiten" [ref=e73] [cursor=pointer]:
+                      - /url: /rentals/854268c5-a92c-4f6d-ba92-631ca23734bb/edit
+                  - cell "-" [ref=e74]
+                - row "test - test 10.03.26, 01:00 - 11.04.26, 01:59 45 Completed bearbeiten -" [ref=e75]:
+                  - cell "test - test" [ref=e76]
+                  - cell "10.03.26, 01:00 - 11.04.26, 01:59" [ref=e77]
+                  - cell "45" [ref=e78]
+                  - cell "Completed" [ref=e79]:
+                    - generic [ref=e80]: Completed
+                  - cell "bearbeiten" [ref=e81]:
+                    - link "bearbeiten" [ref=e82] [cursor=pointer]:
+                      - /url: /rentals/ba737c1f-a285-47c6-a1e8-00d173f20e4b/edit
+                  - cell "-" [ref=e83]
+                - row "test - test 19.03.26, 00:55 - 03.04.26, 02:02 4 Completed bearbeiten -" [ref=e84]:
+                  - cell "test - test" [ref=e85]
+                  - cell "19.03.26, 00:55 - 03.04.26, 02:02" [ref=e86]
+                  - cell "4" [ref=e87]
+                  - cell "Completed" [ref=e88]:
+                    - generic [ref=e89]: Completed
+                  - cell "bearbeiten" [ref=e90]:
+                    - link "bearbeiten" [ref=e91] [cursor=pointer]:
+                      - /url: /rentals/cb813496-d998-41c3-ac8d-21a4af17104c/edit
+                  - cell "-" [ref=e92]
+                - row "test - test 27.03.26, 22:48 - 03.04.26, 22:48 50 Completed bearbeiten -" [ref=e93]:
+                  - cell "test - test" [ref=e94]
+                  - cell "27.03.26, 22:48 - 03.04.26, 22:48" [ref=e95]
+                  - cell "50" [ref=e96]
+                  - cell "Completed" [ref=e97]:
+                    - generic [ref=e98]: Completed
+                  - cell "bearbeiten" [ref=e99]:
+                    - link "bearbeiten" [ref=e100] [cursor=pointer]:
+                      - /url: /rentals/545df36f-fd01-43de-b2f8-17bd9f7f9d3f/edit
+                  - cell "-" [ref=e101]
+                - row "E2E-1774656796248 - Generator 1774656796248 28.03.26, 01:00 - 29.03.26, 00:59 2 Completed bearbeiten -" [ref=e102]:
+                  - cell "E2E-1774656796248 - Generator 1774656796248" [ref=e103]
+                  - cell "28.03.26, 01:00 - 29.03.26, 00:59" [ref=e104]
+                  - cell "2" [ref=e105]
+                  - cell "Completed" [ref=e106]:
+                    - generic [ref=e107]: Completed
+                  - cell "bearbeiten" [ref=e108]:
+                    - link "bearbeiten" [ref=e109] [cursor=pointer]:
+                      - /url: /rentals/23d6965a-a9cf-41c3-8c7b-1131025860f6/edit
+                  - cell "-" [ref=e110]
+                - row "E2E-1774656796248 - Generator 1774656796248 10.01.99, 01:00 - 11.01.99, 00:59 2 Canceled bearbeiten -" [ref=e111]:
+                  - cell "E2E-1774656796248 - Generator 1774656796248" [ref=e112]
+                  - cell "10.01.99, 01:00 - 11.01.99, 00:59" [ref=e113]
+                  - cell "2" [ref=e114]
+                  - cell "Canceled" [ref=e115]:
+                    - generic [ref=e116]: Canceled
+                  - cell "bearbeiten" [ref=e117]:
+                    - link "bearbeiten" [ref=e118] [cursor=pointer]:
+                      - /url: /rentals/5a0c0f8e-5cfd-4971-85b3-cbbe342c9cd7/edit
+                  - cell "-" [ref=e119]
+                - row "E2E-1774657094882 - Generator 1774657094882 10.01.99, 01:00 - 11.01.99, 00:59 2 Completed bearbeiten -" [ref=e120]:
+                  - cell "E2E-1774657094882 - Generator 1774657094882" [ref=e121]
+                  - cell "10.01.99, 01:00 - 11.01.99, 00:59" [ref=e122]
+                  - cell "2" [ref=e123]
+                  - cell "Completed" [ref=e124]:
+                    - generic [ref=e125]: Completed
+                  - cell "bearbeiten" [ref=e126]:
+                    - link "bearbeiten" [ref=e127] [cursor=pointer]:
+                      - /url: /rentals/f6df96fc-57e9-467a-abab-3d2a8c6f971f/edit
+                  - cell "-" [ref=e128]
+                - row "E2E-1774660217986 - Generator 1774660217986 10.01.99, 01:00 - 11.01.99, 00:59 2 Planned bearbeiten Cancel Complete" [ref=e129]:
+                  - cell "E2E-1774660217986 - Generator 1774660217986" [ref=e130]
+                  - cell "10.01.99, 01:00 - 11.01.99, 00:59" [ref=e131]
+                  - cell "2" [ref=e132]
+                  - cell "Planned" [ref=e133]:
+                    - generic [ref=e134]: Planned
+                  - cell "bearbeiten" [ref=e135]:
+                    - link "bearbeiten" [ref=e136] [cursor=pointer]:
+                      - /url: /rentals/94cd06fa-fa05-4f7f-b0cb-d8853f3ef2f6/edit
+                  - cell "Cancel Complete" [ref=e137]:
+                    - generic [ref=e139]:
+                      - button "Cancel" [ref=e140]
+                      - button "Complete" [ref=e141]
+  - button "Open Next.js Dev Tools" [ref=e147] [cursor=pointer]:
+    - img [ref=e148]
+  - alert [ref=e151]: Vermietungen
+```

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExternalLink, Pencil, Plus } from "lucide-react";
 import { buildInventoryRows } from "@/app/inventory/build-rows";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +23,10 @@ export default async function InventoryPage() {
                     </p>
                 </div>
                 <Button asChild>
-                    <Link href="/inventory/new">Neuen Gegenstand anlegen</Link>
+                    <Link href="/inventory/new">
+                        <Plus className="h-4 w-4" />
+                        Neuen Gegenstand anlegen
+                    </Link>
                 </Button>
             </div>
 
@@ -57,13 +61,19 @@ export default async function InventoryPage() {
                                         <p data-testid={`inventory-row-available-${row.id}`} className="font-semibold">{row.available}</p>
                                     </div>
                                 </div>
-                                <div className="flex gap-3 text-sm">
-                                    <Link className="text-red-700 hover:underline dark:text-red-400" href={`/inventory/${row.id}`}>
-                                        oeffnen
-                                    </Link>
-                                    <Link className="text-red-700 hover:underline dark:text-red-400" href={`/inventory/${row.id}/edit`}>
-                                        bearbeiten
-                                    </Link>
+                                <div className="flex flex-wrap gap-2">
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href={`/inventory/${row.id}`}>
+                                            <ExternalLink className="h-4 w-4" />
+                                            oeffnen
+                                        </Link>
+                                    </Button>
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href={`/inventory/${row.id}/edit`}>
+                                            <Pencil className="h-4 w-4" />
+                                            bearbeiten
+                                        </Link>
+                                    </Button>
                                 </div>
                             </article>
                         ))}
@@ -97,17 +107,20 @@ export default async function InventoryPage() {
                                         <TableCell data-testid={`inventory-row-rented-${row.id}`}>{row.rented}</TableCell>
                                         <TableCell data-testid={`inventory-row-available-${row.id}`}>{row.available}</TableCell>
                                         <TableCell>
-                                            <Link className="text-red-700 hover:underline dark:text-red-400" href={`/inventory/${row.id}`}>
-                                                oeffnen
-                                            </Link>
+                                            <Button asChild variant="outline" size="sm">
+                                                <Link href={`/inventory/${row.id}`}>
+                                                    <ExternalLink className="h-4 w-4" />
+                                                    oeffnen
+                                                </Link>
+                                            </Button>
                                         </TableCell>
                                         <TableCell>
-                                            <Link
-                                                className="text-red-700 hover:underline dark:text-red-400"
-                                                href={`/inventory/${row.id}/edit`}
-                                            >
-                                                bearbeiten
-                                            </Link>
+                                            <Button asChild variant="outline" size="sm">
+                                                <Link href={`/inventory/${row.id}/edit`}>
+                                                    <Pencil className="h-4 w-4" />
+                                                    bearbeiten
+                                                </Link>
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))}

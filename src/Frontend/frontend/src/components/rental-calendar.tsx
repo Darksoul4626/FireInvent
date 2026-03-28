@@ -4,6 +4,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { CalendarDays, Table2 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -146,6 +147,7 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonl
                         onClick={() => onViewChange("calendar")}
                         variant={effectiveView === "calendar" ? "default" : "outline"}
                     >
+                        <CalendarDays className="h-4 w-4" />
                         Kalender
                     </Button>
                     <Button
@@ -155,6 +157,7 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonl
                         variant={effectiveView === "table" ? "default" : "outline"}
                         className="hidden sm:inline-flex"
                     >
+                        <Table2 className="h-4 w-4" />
                         Tabelle
                     </Button>
                 </div>

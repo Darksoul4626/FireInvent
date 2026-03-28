@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, CalendarDays, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInventoryItem, getItemAvailability } from "@/lib/api/fireinvent-api";
 
@@ -23,16 +25,25 @@ export default async function InventoryDetailPage({ params }: Readonly<Props>) {
 
     return (
         <section className="grid max-w-4xl gap-4">
-            <div className="grid gap-1 text-sm">
-                <Link className="text-red-700 hover:underline dark:text-red-400" href="/inventory">
-                    Zurueck zur Inventarliste
-                </Link>
-                <Link className="text-red-700 hover:underline dark:text-red-400" href={`/inventory/${id}/edit`}>
-                    Diesen Gegenstand bearbeiten
-                </Link>
-                <Link className="text-red-700 hover:underline dark:text-red-400" href={`/calendar?itemId=${id}`}>
-                    Diesen Gegenstand im Kalender anzeigen
-                </Link>
+            <div className="flex flex-wrap gap-2">
+                <Button asChild variant="secondary" size="sm">
+                    <Link href="/inventory">
+                        <ArrowLeft className="h-4 w-4" />
+                        Zurueck zur Inventarliste
+                    </Link>
+                </Button>
+                <Button asChild size="sm">
+                    <Link href={`/inventory/${id}/edit`}>
+                        <Pencil className="h-4 w-4" />
+                        Diesen Gegenstand bearbeiten
+                    </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                    <Link href={`/calendar?itemId=${id}`}>
+                        <CalendarDays className="h-4 w-4" />
+                        Diesen Gegenstand im Kalender anzeigen
+                    </Link>
+                </Button>
             </div>
 
             <div className="grid gap-1">

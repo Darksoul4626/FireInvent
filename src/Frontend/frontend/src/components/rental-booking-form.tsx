@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { parseApiError } from "@/lib/api/api-error";
 
 type Mode = "create" | "edit";
@@ -233,12 +235,11 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
     });
 
     return (
-        <form data-testid="rental-booking-form" onSubmit={onSubmit} style={{ display: "grid", gap: 12, maxWidth: 760 }}>
-            <label style={labelStyle}>
+        <form data-testid="rental-booking-form" onSubmit={onSubmit} className="grid max-w-3xl gap-4">
+            <label className="grid gap-2 text-sm font-semibold">
                 <span>Gegenstand</span>
-                <select
+                <Select
                     data-testid="rental-item-select"
-                    style={inputStyle}
                     {...register("itemId", { required: mode === "create" })}
                     disabled={mode === "edit"}
                 >
@@ -247,122 +248,69 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
                             {item.inventoryCode} - {item.name}
                         </option>
                     ))}
-                </select>
+                </Select>
             </label>
 
             {selectedItem ? (
-                <p data-testid="rental-item-total-quantity" style={infoStyle}>
+                <p data-testid="rental-item-total-quantity" className="m-0 text-sm">
                     Gesamtbestand: <strong>{selectedItem.totalQuantity}</strong>
                 </p>
             ) : null}
 
-            <label style={labelStyle}>
+            <label className="grid gap-2 text-sm font-semibold">
                 <span>Start</span>
-                <input
+                <Input
                     data-testid="rental-start-input"
-                    style={inputStyle}
                     type="date"
                     {...register("startDate", { required: true })}
                 />
-                {errors.startDate ? <span style={errorStyle}>Start ist erforderlich.</span> : null}
+                {errors.startDate ? <span className="text-sm text-red-700 dark:text-red-400">Start ist erforderlich.</span> : null}
             </label>
 
-            <label style={labelStyle}>
+            <label className="grid gap-2 text-sm font-semibold">
                 <span>Ende</span>
-                <input
+                <Input
                     data-testid="rental-end-input"
-                    style={inputStyle}
                     type="date"
                     {...register("endDate", { required: true })}
                 />
-                {errors.endDate ? <span style={errorStyle}>Ende ist erforderlich.</span> : null}
+                {errors.endDate ? <span className="text-sm text-red-700 dark:text-red-400">Ende ist erforderlich.</span> : null}
             </label>
 
             {selectedStartDate && selectedEndDate ? (
-                <div style={{ display: "grid", gap: 4 }}>
-                    <p data-testid="rental-availability-info" style={infoStyle}>
+                <div className="grid gap-1">
+                    <p data-testid="rental-availability-info" className="m-0 text-sm">
                         {availabilityMessage}
                     </p>
-                    <p data-testid="rental-availability-hint" style={hintStyle}>
+                    <p data-testid="rental-availability-hint" className="m-0 text-xs text-slate-600 dark:text-slate-300">
                         Hinweis: Die Verfuegbarkeit wird fuer den gesamten ausgewaehlten Tageszeitraum berechnet.
                     </p>
                 </div>
             ) : null}
 
-            <label style={labelStyle}>
+            <label className="grid gap-2 text-sm font-semibold">
                 <span>Menge</span>
-                <input
+                <Input
                     data-testid="rental-quantity-input"
-                    style={inputStyle}
                     type="number"
                     min={1}
                     {...register("quantity", { required: true, valueAsNumber: true, min: 1 })}
                 />
-                {errors.quantity ? <span style={errorStyle}>Menge muss groesser 0 sein.</span> : null}
+                {errors.quantity ? <span className="text-sm text-red-700 dark:text-red-400">Menge muss groesser 0 sein.</span> : null}
             </label>
 
-            {submitError ? <p style={errorStyle}>{submitError}</p> : null}
+            {submitError ? <p className="m-0 text-sm text-red-700 dark:text-red-400">{submitError}</p> : null}
             {submitFieldErrors.length > 0 ? (
-                <ul style={errorListStyle}>
+                <ul className="m-0 grid list-disc gap-1 pl-5 text-sm text-red-700 dark:text-red-400">
                     {submitFieldErrors.map((error) => (
                         <li key={error}>{error}</li>
                     ))}
                 </ul>
             ) : null}
 
-            <button data-testid="rental-submit-button" type="submit" disabled={isSubmitting} style={buttonStyle}>
+            <Button data-testid="rental-submit-button" type="submit" disabled={isSubmitting} className="w-fit">
                 {submitLabel}
-            </button>
+            </Button>
         </form>
     );
 }
-
-const labelStyle: CSSProperties = {
-    display: "grid",
-    gap: 6,
-    fontWeight: 600
-};
-
-const inputStyle: CSSProperties = {
-    border: "1px solid #d1d5db",
-    borderRadius: 6,
-    padding: "8px 10px",
-    font: "inherit"
-};
-
-const buttonStyle: CSSProperties = {
-    border: "1px solid #111827",
-    borderRadius: 6,
-    padding: "10px 14px",
-    background: "#111827",
-    color: "#ffffff",
-    fontWeight: 600,
-    width: "fit-content"
-};
-
-const infoStyle: CSSProperties = {
-    margin: 0,
-    color: "#111827",
-    fontSize: 14
-};
-
-const hintStyle: CSSProperties = {
-    margin: 0,
-    color: "#4b5563",
-    fontSize: 13
-};
-
-const errorStyle: CSSProperties = {
-    color: "#b91c1c",
-    margin: 0,
-    fontSize: 14
-};
-
-const errorListStyle: CSSProperties = {
-    color: "#b91c1c",
-    margin: 0,
-    paddingLeft: 18,
-    fontSize: 14,
-    display: "grid",
-    gap: 4
-};

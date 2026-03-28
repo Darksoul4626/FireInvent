@@ -37,12 +37,12 @@ Das Ziel ist eine moderne, feuerwehrnahe Bedienoberflaeche mit:
 - Why: Wiedererkennbarkeit ohne visuelle Ueberlastung.
 - Umsetzung: Rot vor allem fuer primaere Akzente, aktive Navigation, wichtige Badges; Flaechen bleiben neutral.
 
-5. Responsiveness: Mobile-first Abstaende/Typografie; Tabellen mit horizontalem Scroll-Fallback und optionalen kompakten Darstellungen.
+5. Responsiveness: Mobile-first Abstaende/Typografie; Tabellen mit horizontalem Scroll-Fallback.
 - Why: Bedienbarkeit auf kleinen Geraeten bei grossen Datenmengen.
 
-## Open Question
-
-- Soll ein optionaler "Kompaktmodus" (reduzierte Row-Hoehen, geringere Abstaende, dichtere Tabellenansichten fuer Leitstellen-/Power-User-Szenarien) bereits in diesem Change enthalten sein oder als Folge-Change umgesetzt werden?
+6. Scope Decision: Ein optionaler Kompaktmodus wird in diesem Change nicht umgesetzt und als Folge-Change geplant.
+- Why: Der aktuelle Fokus liegt auf stabiler App-Shell-, Theme- und Responsiveness-Migration ohne zusaetzliche Interaktionskomplexitaet.
+- Folge-Change: Dichte Darstellung (reduzierte Row-Hoehen/Abstaende, kompakter Tabellenmodus) fuer Power-User-Szenarien.
 
 ## Architecture Sketch
 

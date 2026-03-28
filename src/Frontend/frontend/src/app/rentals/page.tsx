@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { RentalStatusActions } from "@/components/rental-status-actions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getInventoryItems, getRentalBookings } from "@/lib/api/fireinvent-api";
 
 export const dynamic = "force-dynamic";
@@ -9,51 +13,100 @@ export default async function RentalsPage() {
     const itemMap = new Map(items.map((i) => [i.id, i]));
 
     return (
-        <main style={{ padding: 24, fontFamily: "ui-sans-serif, system-ui" }}>
-            <h1 style={{ marginBottom: 6 }}>Vermietungen</h1>
-            <p style={{ marginTop: 0, color: "#4b5563" }}>Anlegen, bearbeiten und Lifecycle-Status verwalten.</p>
-            <p>
-                <Link href="/rentals/new">Neue Vermietung anlegen</Link>
-            </p>
+        <section className="grid gap-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="grid gap-1">
+                    <h1 className="text-2xl font-bold">Vermietungen</h1>
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
+                        Anlegen, bearbeiten und Lifecycle-Status verwalten.
+                    </p>
+                </div>
+                <Button asChild>
+                    <Link href="/rentals/new">Neue Vermietung anlegen</Link>
+                </Button>
+            </div>
 
-            <div style={{ overflowX: "auto" }}>
-                <table data-testid="rentals-table" style={{ borderCollapse: "collapse", width: "100%" }}>
-                    <thead>
-                        <tr style={{ background: "#f3f4f6" }}>
-                            <th style={th}>Gegenstand</th>
-                            <th style={th}>Zeitraum</th>
-                            <th style={th}>Menge</th>
-                            <th style={th}>Status</th>
-                            <th style={th}>Bearbeiten</th>
-                            <th style={th}>Lifecycle</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Vermietungsuebersicht</CardTitle>
+                    <CardDescription>Alle Buchungen inkl. Status und Aktionen.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-3 xl:hidden">
                         {rentals.map((rental) => {
                             const item = itemMap.get(rental.itemId);
                             return (
-                                <tr key={rental.id} data-testid={`rental-row-${rental.id}`}>
-                                    <td data-testid={`rental-row-item-${rental.id}`} style={td}>
+                                <article key={rental.id} className="fi-mobile-list-card grid gap-2" data-testid={`rental-mobile-card-${rental.id}`}>
+                                    <h3 data-testid={`rental-row-item-${rental.id}`} className="text-sm font-semibold">
                                         {item ? `${item.inventoryCode} - ${item.name}` : rental.itemId}
-                                    </td>
-                                    <td style={td}>
+                                    </h3>
+                                    <p className="text-xs text-slate-600 dark:text-slate-300">
                                         {formatDate(rental.startDate)} - {formatDate(rental.endDate)}
-                                    </td>
-                                    <td style={td}>{rental.quantity}</td>
-                                    <td data-testid={`rental-row-status-${rental.id}`} style={td}>{rental.status}</td>
-                                    <td style={td}>
-                                        <Link href={`/rentals/${rental.id}/edit`}>bearbeiten</Link>
-                                    </td>
-                                    <td style={td}>
+                                    </p>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="text-sm">Menge: {rental.quantity}</p>
+                                        <Badge data-testid={`rental-row-status-${rental.id}`} variant={rental.status === "Canceled" ? "outline" : "secondary"}>
+                                            {rental.status}
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <Link className="text-sm text-red-700 hover:underline dark:text-red-400" href={`/rentals/${rental.id}/edit`}>
+                                            bearbeiten
+                                        </Link>
                                         <RentalStatusActions rentalId={rental.id} status={rental.status} />
-                                    </td>
-                                </tr>
+                                    </div>
+                                </article>
                             );
                         })}
-                    </tbody>
-                </table>
-            </div>
-        </main>
+                    </div>
+
+                    <div className="hidden xl:block">
+                        <Table data-testid="rentals-table" className="min-w-[46rem] lg:min-w-[56rem]">
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Gegenstand</TableHead>
+                                    <TableHead>Zeitraum</TableHead>
+                                    <TableHead>Menge</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Bearbeiten</TableHead>
+                                    <TableHead>Lifecycle</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {rentals.map((rental) => {
+                                    const item = itemMap.get(rental.itemId);
+                                    return (
+                                        <TableRow key={rental.id} data-testid={`rental-row-${rental.id}`}>
+                                            <TableCell data-testid={`rental-row-item-${rental.id}`}>
+                                                {item ? `${item.inventoryCode} - ${item.name}` : rental.itemId}
+                                            </TableCell>
+                                            <TableCell>
+                                                {formatDate(rental.startDate)} - {formatDate(rental.endDate)}
+                                            </TableCell>
+                                            <TableCell>{rental.quantity}</TableCell>
+                                            <TableCell data-testid={`rental-row-status-${rental.id}`}>
+                                                <Badge variant={rental.status === "Canceled" ? "outline" : "secondary"}>{rental.status}</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Link
+                                                    className="text-red-700 hover:underline dark:text-red-400"
+                                                    href={`/rentals/${rental.id}/edit`}
+                                                >
+                                                    bearbeiten
+                                                </Link>
+                                            </TableCell>
+                                            <TableCell>
+                                                <RentalStatusActions rentalId={rental.id} status={rental.status} />
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        </section>
     );
 }
 
@@ -64,15 +117,3 @@ function formatDate(input: string): string {
     });
 }
 
-const th: React.CSSProperties = {
-    textAlign: "left",
-    padding: "10px 8px",
-    borderBottom: "1px solid #d1d5db",
-    fontWeight: 600
-};
-
-const td: React.CSSProperties = {
-    padding: "10px 8px",
-    borderBottom: "1px solid #e5e7eb",
-    verticalAlign: "top"
-};

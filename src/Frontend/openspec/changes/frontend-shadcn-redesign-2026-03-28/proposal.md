@@ -30,6 +30,7 @@ Fuer die Feuerwehr wird eine moderne, robuste und responsive Bedienoberflaeche b
 - Keine Aenderung an fachlicher Backend-Logik, API-Vertraegen oder Datenmodell.
 - Kein Rebranding des Produktnamens oder Neuausrichtung der Informationsarchitektur.
 - Keine Einfuehrung von Rollen-/Rechtekonzepten in diesem Change.
+- Kein optionaler Kompaktmodus fuer dichte Datenansichten in diesem Change (separater Folge-Change).
 
 ## Impact
 

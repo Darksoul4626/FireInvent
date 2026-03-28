@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RentalCalendar } from "@/components/rental-calendar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInventoryItems, getRentalBookings } from "@/lib/api/fireinvent-api";
 import type { RentalStatus } from "@/lib/api/fireinvent-api";
 
@@ -142,16 +143,24 @@ export default async function RentalCalendarPage({ searchParams }: Props) {
     }));
 
     return (
-        <main style={{ padding: 24, fontFamily: "ui-sans-serif, system-ui", display: "grid", gap: 16 }}>
-            <p style={{ margin: 0 }}>
-                <Link href="/">Zur Startseite</Link>
-            </p>
-            <h1 style={{ margin: 0 }}>Vermietungskalender</h1>
-            <p style={{ margin: 0, color: "#4b5563" }}>
-                Zeigt geplante und aktive Vermietungen fuer ausgewaehlte Zeitraeume (Monat/Woche/Tag).
+        <section className="grid gap-4">
+            <p className="m-0">
+                <Link className="text-red-700 hover:underline dark:text-red-400" href="/">
+                    Zur Startseite
+                </Link>
             </p>
 
-            <RentalCalendar rentals={calendarRentals} itemOptions={itemOptions} selectedItemId={selectedItemId} />
-        </main>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Vermietungskalender</CardTitle>
+                    <CardDescription>
+                        Zeigt geplante und aktive Vermietungen fuer ausgewaehlte Zeitraeume (Monat/Woche/Tag).
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <RentalCalendar rentals={calendarRentals} itemOptions={itemOptions} selectedItemId={selectedItemId} />
+                </CardContent>
+            </Card>
+        </section>
     );
 }

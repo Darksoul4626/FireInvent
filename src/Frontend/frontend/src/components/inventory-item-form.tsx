@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { parseApiError } from "@/lib/api/api-error";
 
 type Mode = "create" | "edit";
@@ -45,7 +47,7 @@ const createSchema = baseSchema.extend({
 
 const editSchema = baseSchema;
 
-export function InventoryItemForm({ mode, itemId, initialValues }: Props) {
+export function InventoryItemForm({ mode, itemId, initialValues }: Readonly<Props>) {
     const router = useRouter();
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitFieldErrors, setSubmitFieldErrors] = useState<string[]>([]);
@@ -67,6 +69,11 @@ export function InventoryItemForm({ mode, itemId, initialValues }: Props) {
         handleSubmit,
         formState: { errors, isSubmitting }
     } = useForm<FormValues>({ defaultValues: defaults });
+
+    let submitLabel = mode === "create" ? "Anlegen" : "Speichern";
+    if (isSubmitting) {
+        submitLabel = "Speichert...";
+    }
 
     const onSubmit = handleSubmit(async (values) => {
         setSubmitError(null);
@@ -118,60 +125,56 @@ export function InventoryItemForm({ mode, itemId, initialValues }: Props) {
     });
 
     return (
-        <form data-testid="inventory-item-form" onSubmit={onSubmit} style={{ display: "grid", gap: 12, maxWidth: 720 }}>
+        <form data-testid="inventory-item-form" onSubmit={onSubmit} className="grid max-w-3xl gap-4">
             {mode === "create" ? (
-                <label style={labelStyle}>
+                <label className="grid gap-2 text-sm font-semibold">
                     Inventar-Code
-                    <input
+                    <Input
                         data-testid="inventory-code-input"
-                        style={inputStyle}
                         {...register("inventoryCode", { required: true, maxLength: 64 })}
                     />
-                    {errors.inventoryCode ? <span style={errorStyle}>Code ist erforderlich (max. 64).</span> : null}
+                    {errors.inventoryCode ? <span className="text-sm text-red-700 dark:text-red-400">Code ist erforderlich (max. 64).</span> : null}
                 </label>
             ) : null}
 
-            <label style={labelStyle}>
+            <label className="grid gap-2 text-sm font-semibold">
                 Name
-                <input data-testid="inventory-name-input" style={inputStyle} {...register("name", { required: true, maxLength: 256 })} />
-                {errors.name ? <span style={errorStyle}>Name ist erforderlich (max. 256).</span> : null}
+                <Input data-testid="inventory-name-input" {...register("name", { required: true, maxLength: 256 })} />
+                {errors.name ? <span className="text-sm text-red-700 dark:text-red-400">Name ist erforderlich (max. 256).</span> : null}
             </label>
 
-            <label style={labelStyle}>
+            <label className="grid gap-2 text-sm font-semibold">
                 Kategorie
-                <input
+                <Input
                     data-testid="inventory-category-input"
-                    style={inputStyle}
                     {...register("category", { required: true, maxLength: 128 })}
                 />
-                {errors.category ? <span style={errorStyle}>Kategorie ist erforderlich (max. 128).</span> : null}
+                {errors.category ? <span className="text-sm text-red-700 dark:text-red-400">Kategorie ist erforderlich (max. 128).</span> : null}
             </label>
 
-            <label style={labelStyle}>
+            <label className="grid gap-2 text-sm font-semibold">
                 Zustand
-                <select data-testid="inventory-condition-select" style={inputStyle} {...register("condition", { required: true })}>
+                <Select data-testid="inventory-condition-select" {...register("condition", { required: true })}>
                     <option value="Unknown">Unknown</option>
                     <option value="Good">Good</option>
                     <option value="NeedsRepair">NeedsRepair</option>
                     <option value="OutOfService">OutOfService</option>
-                </select>
+                </Select>
             </label>
 
-            <label style={labelStyle}>
+            <label className="grid gap-2 text-sm font-semibold">
                 Ort
-                <input
+                <Input
                     data-testid="inventory-location-input"
-                    style={inputStyle}
                     {...register("location", { required: true, maxLength: 128 })}
                 />
-                {errors.location ? <span style={errorStyle}>Ort ist erforderlich (max. 128).</span> : null}
+                {errors.location ? <span className="text-sm text-red-700 dark:text-red-400">Ort ist erforderlich (max. 128).</span> : null}
             </label>
 
-            <label style={labelStyle}>
+            <label className="grid gap-2 text-sm font-semibold">
                 Gesamtmenge
-                <input
+                <Input
                     data-testid="inventory-total-quantity-input"
-                    style={inputStyle}
                     type="number"
                     min={1}
                     {...register("totalQuantity", {
@@ -180,59 +183,21 @@ export function InventoryItemForm({ mode, itemId, initialValues }: Props) {
                         min: 1
                     })}
                 />
-                {errors.totalQuantity ? <span style={errorStyle}>Gesamtmenge muss groesser 0 sein.</span> : null}
+                {errors.totalQuantity ? <span className="text-sm text-red-700 dark:text-red-400">Gesamtmenge muss groesser 0 sein.</span> : null}
             </label>
 
-            {submitError ? <p style={errorStyle}>{submitError}</p> : null}
+            {submitError ? <p className="m-0 text-sm text-red-700 dark:text-red-400">{submitError}</p> : null}
             {submitFieldErrors.length > 0 ? (
-                <ul style={errorListStyle}>
+                <ul className="m-0 grid list-disc gap-1 pl-5 text-sm text-red-700 dark:text-red-400">
                     {submitFieldErrors.map((error) => (
                         <li key={error}>{error}</li>
                     ))}
                 </ul>
             ) : null}
 
-            <button data-testid="inventory-submit-button" type="submit" disabled={isSubmitting} style={buttonStyle}>
-                {isSubmitting ? "Speichert..." : mode === "create" ? "Anlegen" : "Speichern"}
-            </button>
+            <Button data-testid="inventory-submit-button" type="submit" disabled={isSubmitting} className="w-fit">
+                {submitLabel}
+            </Button>
         </form>
     );
 }
-
-const labelStyle: CSSProperties = {
-    display: "grid",
-    gap: 6,
-    fontWeight: 600
-};
-
-const inputStyle: CSSProperties = {
-    border: "1px solid #d1d5db",
-    borderRadius: 6,
-    padding: "8px 10px",
-    font: "inherit"
-};
-
-const buttonStyle: CSSProperties = {
-    border: "1px solid #111827",
-    borderRadius: 6,
-    padding: "10px 14px",
-    background: "#111827",
-    color: "#ffffff",
-    fontWeight: 600,
-    width: "fit-content"
-};
-
-const errorStyle: CSSProperties = {
-    color: "#b91c1c",
-    margin: 0,
-    fontSize: 14
-};
-
-const errorListStyle: CSSProperties = {
-    color: "#b91c1c",
-    margin: 0,
-    paddingLeft: 18,
-    fontSize: 14,
-    display: "grid",
-    gap: 4
-};

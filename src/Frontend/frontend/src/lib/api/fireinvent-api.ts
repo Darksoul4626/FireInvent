@@ -1,15 +1,25 @@
 import {
     AvailabilityService,
+    InventoryCategoriesService,
     InventoryItemsService,
     RentalBookingsService,
+    type InventoryCategoryResponse as GeneratedInventoryCategory,
     type InventoryItemResponse as GeneratedInventoryItem,
     type ItemAvailabilityResponse as GeneratedItemAvailability,
+    type RentalBookingLineResponse as GeneratedRentalBookingLine,
     type RentalBookingResponse as GeneratedRentalBooking
 } from "@/lib/api/generated";
 import { configureOpenApiClient, getApiBaseUrl } from "@/lib/api/openapi-client";
 
 export type ItemCondition = "Unknown" | "Good" | "NeedsRepair" | "OutOfService";
-export type RentalStatus = "Planned" | "Active" | "Canceled" | "Completed";
+export type RentalStatus = "Planned" | "Active" | "Returned" | "Canceled" | "Completed";
+
+export interface InventoryCategoryDto {
+    id: string;
+    name: string;
+    createdAt: string;
+    updatedAt: string;
+}
 
 export interface InventoryItemDto {
     id: string;
@@ -25,13 +35,18 @@ export interface InventoryItemDto {
 
 export interface RentalBookingDto {
     id: string;
-    itemId: string;
     startDate: string;
     endDate: string;
-    quantity: number;
+    lines: RentalBookingLineDto[];
+    borrowerName: string | null;
     status: RentalStatus;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface RentalBookingLineDto {
+    itemId: string;
+    quantity: number;
 }
 
 export interface ItemAvailabilityDto {
@@ -73,12 +88,30 @@ function toRentalStatus(value: number): RentalStatus {
         case 1:
             return "Active";
         case 2:
-            return "Canceled";
+            return "Returned";
         case 3:
+            return "Canceled";
+        case 4:
             return "Completed";
         default:
             return "Planned";
     }
+}
+
+function mapRentalBookingLine(dto: GeneratedRentalBookingLine): RentalBookingLineDto {
+    return {
+        itemId: dto.itemId,
+        quantity: toNumber(dto.quantity)
+    };
+}
+
+function mapInventoryCategory(dto: GeneratedInventoryCategory): InventoryCategoryDto {
+    return {
+        id: dto.id,
+        name: dto.name,
+        createdAt: dto.createdAt,
+        updatedAt: dto.updatedAt
+    };
 }
 
 function mapInventoryItem(dto: GeneratedInventoryItem): InventoryItemDto {
@@ -98,10 +131,10 @@ function mapInventoryItem(dto: GeneratedInventoryItem): InventoryItemDto {
 function mapRentalBooking(dto: GeneratedRentalBooking): RentalBookingDto {
     return {
         id: dto.id,
-        itemId: dto.itemId,
         startDate: dto.startDate,
         endDate: dto.endDate,
-        quantity: toNumber(dto.quantity),
+        lines: dto.lines.map(mapRentalBookingLine),
+        borrowerName: dto.borrowerName,
         status: toRentalStatus(dto.status),
         createdAt: dto.createdAt,
         updatedAt: dto.updatedAt
@@ -147,4 +180,9 @@ export async function getItemAvailability(itemId: string, at: Date): Promise<Ite
         to: when
     });
     return mapItemAvailability(response);
+}
+
+export async function getInventoryCategories(): Promise<InventoryCategoryDto[]> {
+    const response = await InventoryCategoriesService.getApiCategories();
+    return response.map(mapInventoryCategory);
 }

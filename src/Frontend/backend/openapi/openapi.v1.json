@@ -66,6 +66,210 @@
         }
       }
     },
+    "/api/categories": {
+      "get": {
+        "tags": [
+          "InventoryCategories"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InventoryCategoryResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InventoryCategoryResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InventoryCategoryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "InventoryCategories"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryCategoryRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryCategoryRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryCategoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryCategoryResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryCategoryResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryCategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories/{id}": {
+      "get": {
+        "tags": [
+          "InventoryCategories"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryCategoryResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryCategoryResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryCategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "InventoryCategories"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryCategoryRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryCategoryRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryCategoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryCategoryResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryCategoryResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryCategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "InventoryCategories"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/items": {
       "get": {
         "tags": [
@@ -493,6 +697,46 @@
         }
       }
     },
+    "/api/rentals/{id}/return": {
+      "post": {
+        "tags": [
+          "RentalBookings"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalBookingResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalBookingResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RentalBookingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rentals/{id}/complete": {
       "post": {
         "tags": [
@@ -536,6 +780,17 @@
   },
   "components": {
     "schemas": {
+      "CreateInventoryCategoryRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "CreateInventoryItemRequest": {
         "required": [
           "inventoryCode",
@@ -574,17 +829,13 @@
       },
       "CreateRentalBookingRequest": {
         "required": [
-          "itemId",
           "startDate",
           "endDate",
-          "quantity"
+          "lines",
+          "borrowerName"
         ],
         "type": "object",
         "properties": {
-          "itemId": {
-            "type": "string",
-            "format": "uuid"
-          },
           "startDate": {
             "type": "string",
             "format": "date-time"
@@ -593,13 +844,43 @@
             "type": "string",
             "format": "date-time"
           },
-          "quantity": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalBookingLineRequest"
+            }
+          },
+          "borrowerName": {
             "type": [
-              "integer",
+              "null",
               "string"
-            ],
-            "format": "int32"
+            ]
+          }
+        }
+      },
+      "InventoryCategoryResponse": {
+        "required": [
+          "id",
+          "name",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -706,13 +987,55 @@
       "ItemCondition": {
         "type": "integer"
       },
+      "RentalBookingLineRequest": {
+        "required": [
+          "itemId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RentalBookingLineResponse": {
+        "required": [
+          "itemId",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "RentalBookingResponse": {
         "required": [
           "id",
-          "itemId",
           "startDate",
           "endDate",
-          "quantity",
+          "lines",
+          "borrowerName",
           "status",
           "createdAt",
           "updatedAt"
@@ -720,10 +1043,6 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "itemId": {
             "type": "string",
             "format": "uuid"
           },
@@ -735,13 +1054,17 @@
             "type": "string",
             "format": "date-time"
           },
-          "quantity": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalBookingLineResponse"
+            }
+          },
+          "borrowerName": {
             "type": [
-              "integer",
+              "null",
               "string"
-            ],
-            "format": "int32"
+            ]
           },
           "status": {
             "$ref": "#/components/schemas/RentalStatus"
@@ -758,6 +1081,17 @@
       },
       "RentalStatus": {
         "type": "integer"
+      },
+      "UpdateInventoryCategoryRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
       },
       "UpdateInventoryItemRequest": {
         "required": [
@@ -795,7 +1129,9 @@
         "required": [
           "startDate",
           "endDate",
-          "quantity"
+          "lines",
+          "borrowerName",
+          "status"
         ],
         "type": "object",
         "properties": {
@@ -807,13 +1143,20 @@
             "type": "string",
             "format": "date-time"
           },
-          "quantity": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RentalBookingLineRequest"
+            }
+          },
+          "borrowerName": {
             "type": [
-              "integer",
+              "null",
               "string"
-            ],
-            "format": "int32"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/RentalStatus"
           }
         }
       }
@@ -822,6 +1165,9 @@
   "tags": [
     {
       "name": "Availability"
+    },
+    {
+      "name": "InventoryCategories"
     },
     {
       "name": "InventoryItems"

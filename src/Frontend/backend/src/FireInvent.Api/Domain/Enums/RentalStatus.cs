@@ -4,6 +4,7 @@ public enum RentalStatus
 {
     Planned = 0,
     Active = 1,
-    Canceled = 2,
-    Completed = 3
+    Returned = 2,
+    Canceled = 3,
+    Completed = 4
 }

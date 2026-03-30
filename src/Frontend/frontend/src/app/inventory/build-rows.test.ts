@@ -21,30 +21,30 @@ describe("buildInventoryRows", () => {
             [
                 {
                     id: "r-1",
-                    itemId: "item-1",
                     startDate: "2026-03-10T11:00:00.000Z",
                     endDate: "2026-03-10T13:00:00.000Z",
-                    quantity: 2,
+                    lines: [{ itemId: "item-1", quantity: 2 }],
+                    borrowerName: null,
                     status: "Planned",
                     createdAt: now.toISOString(),
                     updatedAt: now.toISOString()
                 },
                 {
                     id: "r-2",
-                    itemId: "item-1",
                     startDate: "2026-03-10T11:30:00.000Z",
                     endDate: "2026-03-10T12:30:00.000Z",
-                    quantity: 1,
+                    lines: [{ itemId: "item-1", quantity: 1 }],
+                    borrowerName: null,
                     status: "Active",
                     createdAt: now.toISOString(),
                     updatedAt: now.toISOString()
                 },
                 {
                     id: "r-3",
-                    itemId: "item-1",
                     startDate: "2026-03-10T11:30:00.000Z",
                     endDate: "2026-03-10T12:30:00.000Z",
-                    quantity: 99,
+                    lines: [{ itemId: "item-1", quantity: 99 }],
+                    borrowerName: null,
                     status: "Completed",
                     createdAt: now.toISOString(),
                     updatedAt: now.toISOString()
@@ -78,10 +78,10 @@ describe("buildInventoryRows", () => {
             [
                 {
                     id: "r-4",
-                    itemId: "item-2",
                     startDate: "2026-03-10T11:00:00.000Z",
                     endDate: "2026-03-10T13:00:00.000Z",
-                    quantity: 5,
+                    lines: [{ itemId: "item-2", quantity: 5 }],
+                    borrowerName: null,
                     status: "Active",
                     createdAt: now.toISOString(),
                     updatedAt: now.toISOString()

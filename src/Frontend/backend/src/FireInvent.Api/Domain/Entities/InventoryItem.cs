@@ -8,6 +8,8 @@ public sealed class InventoryItem
     public string InventoryCode { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
+    public Guid CategoryId { get; set; }
+    public InventoryCategory CategoryEntity { get; set; } = null!;
     public ItemCondition Condition { get; set; } = ItemCondition.Unknown;
     public string Location { get; set; } = string.Empty;
     public int TotalQuantity { get; set; }
@@ -15,4 +17,5 @@ public sealed class InventoryItem
     public DateTimeOffset UpdatedAt { get; set; }
 
     public ICollection<RentalBooking> RentalBookings { get; set; } = new List<RentalBooking>();
+    public ICollection<RentalBookingLine> RentalBookingLines { get; set; } = new List<RentalBookingLine>();
 }

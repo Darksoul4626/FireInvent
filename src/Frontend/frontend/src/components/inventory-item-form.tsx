@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Loader2, Plus, Save } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ const conditionToApiValue: Record<FormValues["condition"], number> = {
 type Props = {
     mode: Mode;
     itemId?: string;
+    categoryOptions: Array<{ id: string; name: string }>;
     initialValues?: Partial<FormValues>;
 };
 
@@ -48,7 +50,7 @@ const createSchema = baseSchema.extend({
 
 const editSchema = baseSchema;
 
-export function InventoryItemForm({ mode, itemId, initialValues }: Readonly<Props>) {
+export function InventoryItemForm({ mode, itemId, categoryOptions, initialValues }: Readonly<Props>) {
     const router = useRouter();
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitFieldErrors, setSubmitFieldErrors] = useState<string[]>([]);
@@ -146,11 +148,18 @@ export function InventoryItemForm({ mode, itemId, initialValues }: Readonly<Prop
 
             <label className="grid gap-2 text-sm font-semibold">
                 Kategorie
-                <Input
-                    data-testid="inventory-category-input"
-                    {...register("category", { required: true, maxLength: 128 })}
-                />
+                <Select data-testid="inventory-category-select" {...register("category", { required: true, maxLength: 128 })}>
+                    <option value="">Bitte waehlen</option>
+                    {categoryOptions.map((category) => (
+                        <option key={category.id} value={category.name}>
+                            {category.name}
+                        </option>
+                    ))}
+                </Select>
                 {errors.category ? <span className="text-sm text-red-700 dark:text-red-400">Kategorie ist erforderlich (max. 128).</span> : null}
+                <span className="text-xs text-slate-600 dark:text-slate-300">
+                    Kategorie fehlt? <Link href="/inventory/categories" className="font-semibold text-red-700 hover:underline dark:text-red-400">Zur Kategorieverwaltung</Link>
+                </span>
             </label>
 
             <label className="grid gap-2 text-sm font-semibold">

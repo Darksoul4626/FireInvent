@@ -4,10 +4,10 @@ namespace FireInvent.Api.Contracts.Rentals;
 
 public sealed record RentalBookingResponse(
     Guid Id,
-    Guid ItemId,
     DateTimeOffset StartDate,
     DateTimeOffset EndDate,
-    int Quantity,
+    IReadOnlyList<RentalBookingLineResponse> Lines,
+    string? BorrowerName,
     RentalStatus Status,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

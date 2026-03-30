@@ -8,13 +8,19 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
     const suffix = `${Date.now()}`;
     const itemCode = `E2E-${suffix}`;
     const itemName = `Generator ${suffix}`;
+    const categoryName = `E2E-CAT-${suffix}`;
     let itemId = "";
+
+    const createCategoryResponse = await page.request.post("http://localhost:5153/api/categories", {
+        data: { name: categoryName }
+    });
+    expect(createCategoryResponse.ok()).toBeTruthy();
 
     await page.goto("/inventory/new");
 
     await page.getByTestId("inventory-code-input").fill(itemCode);
     await page.getByTestId("inventory-name-input").fill(itemName);
-    await page.getByTestId("inventory-category-input").fill("Power");
+    await page.getByTestId("inventory-category-select").selectOption(categoryName);
     await page.getByTestId("inventory-condition-select").selectOption("Good");
     await page.getByTestId("inventory-location-input").fill("Station A");
     await page.getByTestId("inventory-total-quantity-input").fill("3");
@@ -33,12 +39,14 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
     await page.goto("/rentals/new");
 
     const createdItemLabel = `${itemCode} - ${itemName}`;
-    await page.getByTestId("rental-item-select").selectOption({ label: createdItemLabel });
+    await page.getByTestId("rental-item-select").selectOption(itemId);
 
-    const start = new Date("2099-01-10T09:00:00.000Z");
-    const end = new Date("2099-01-10T18:00:00.000Z");
+    const day = (Number(suffix.slice(-2)) % 20) + 1;
+    const dayPadded = String(day).padStart(2, "0");
+    const start = new Date(`2099-02-${dayPadded}T09:00:00.000Z`);
+    const end = new Date(`2099-02-${dayPadded}T18:00:00.000Z`);
     await fillRentalDateRange(page, start, end);
-    await fillRentalQuantity(page, 2);
+    await fillRentalQuantity(page, 1);
 
     const createResponsePromise = page.waitForResponse((response) => {
         return response.url().includes("/api/proxy/rentals") && response.request().method() === "POST";
@@ -47,7 +55,13 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
 
     const createResponse = await createResponsePromise;
     expect(createResponse.ok()).toBeTruthy();
-    const createdRental = (await createResponse.json()) as { id: string };
+    const createdRental = (await createResponse.json()) as {
+        id: string;
+        startDate: string;
+        endDate: string;
+        lines: Array<{ itemId: string; quantity: number }>;
+        borrowerName: string | null;
+    };
 
     await expect(page).toHaveURL(/\/rentals$/);
 
@@ -56,9 +70,31 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
     await expect(rowCellById(page, "rental-row", "rental-row-item", createdRental.id)).toContainText(createdItemLabel);
     await expect(rowCellById(page, "rental-row", "rental-row-status", createdRental.id)).toHaveText("Planned");
 
+    const activateResponse = await page.request.put(
+        `http://localhost:5153/api/rentals/${createdRental.id}`,
+        {
+            data: {
+                startDate: createdRental.startDate,
+                endDate: createdRental.endDate,
+                lines: createdRental.lines,
+                borrowerName: createdRental.borrowerName,
+                status: 1
+            }
+        }
+    );
+
+    expect(activateResponse.ok()).toBeTruthy();
+
+    const returnResponse = await page.request.post(
+        `http://localhost:5153/api/rentals/${createdRental.id}/return`
+    );
+
+    expect(returnResponse.ok()).toBeTruthy();
+
     const completeResponse = await page.request.post(
         `http://localhost:5153/api/rentals/${createdRental.id}/complete`
     );
+
     expect(completeResponse.ok()).toBeTruthy();
 
     await page.goto("/inventory");

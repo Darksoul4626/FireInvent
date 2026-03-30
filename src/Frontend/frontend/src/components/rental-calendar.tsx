@@ -16,12 +16,13 @@ const denseThreshold = 30;
 
 type CalendarRental = {
     id: string;
+    rentalId: string;
     itemId: string;
     itemLabel: string;
     startDate: string;
     endDate: string;
     quantity: number;
-    status: "Planned" | "Active";
+    status: "Planned" | "Active" | "Returned" | "Completed";
     isConflict?: boolean;
 };
 
@@ -38,7 +39,9 @@ type Props = {
 
 const statusColor: Record<CalendarRental["status"], string> = {
     Planned: "#2563eb",
-    Active: "#059669"
+    Active: "#059669",
+    Returned: "#d97706",
+    Completed: "#334155"
 };
 
 const conflictColor = "#dc2626";
@@ -170,6 +173,8 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonl
             <div className="flex flex-wrap gap-2 text-xs">
                 <Badge variant="secondary" className="fi-status-planned">Planned: geplant</Badge>
                 <Badge variant="secondary" className="fi-status-active">Active: aktiv ausgeliehen</Badge>
+                <Badge variant="secondary" className="fi-status-returned">Returned: zurueckgegeben</Badge>
+                <Badge variant="secondary" className="fi-status-completed">Completed: abgeschlossen</Badge>
                 <Badge variant="secondary" className="fi-status-conflict">Conflict: ueberbucht</Badge>
             </div>
 

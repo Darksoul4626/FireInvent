@@ -4,7 +4,9 @@ import { ArrowLeft } from "lucide-react";
 import { InventoryItemForm } from "@/components/inventory-item-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getInventoryItem } from "@/lib/api/fireinvent-api";
+import { getInventoryCategories, getInventoryItem } from "@/lib/api/fireinvent-api";
+
+export const dynamic = "force-dynamic";
 
 type Props = {
     params: Promise<{ id: string }>;
@@ -19,6 +21,12 @@ export default async function EditInventoryItemPage({ params }: Props) {
     } catch {
         notFound();
     }
+
+    const categories = await getInventoryCategories();
+    const hasInitialCategory = categories.some((category) => category.name === item.category);
+    const categoryOptions = hasInitialCategory
+        ? categories
+        : [{ id: "legacy", name: item.category }, ...categories];
 
     return (
         <section className="grid max-w-3xl gap-4">
@@ -39,6 +47,10 @@ export default async function EditInventoryItemPage({ params }: Props) {
                     <InventoryItemForm
                         mode="edit"
                         itemId={id}
+                        categoryOptions={categoryOptions.map((category) => ({
+                            id: category.id,
+                            name: category.name
+                        }))}
                         initialValues={{
                             inventoryCode: item.inventoryCode,
                             name: item.name,

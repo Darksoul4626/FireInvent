@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ExternalLink, Pencil, Plus } from "lucide-react";
 import { buildInventoryRows } from "@/app/inventory/build-rows";
+import { InventoryItemDeleteAction } from "@/components/inventory-item-delete-action";
+import { ActionButtonGroup } from "@/components/ui/action-button-group";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,6 +28,11 @@ export default async function InventoryPage() {
                     <Link href="/inventory/new">
                         <Plus className="h-4 w-4" />
                         Neuen Gegenstand anlegen
+                    </Link>
+                </Button>
+                <Button asChild variant="outline">
+                    <Link href="/inventory/categories">
+                        Kategorien verwalten
                     </Link>
                 </Button>
             </div>
@@ -61,26 +68,30 @@ export default async function InventoryPage() {
                                         <p data-testid={`inventory-row-available-${row.id}`} className="font-semibold">{row.available}</p>
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-2">
-                                    <Button asChild variant="outline" size="sm">
-                                        <Link href={`/inventory/${row.id}`}>
-                                            <ExternalLink className="h-4 w-4" />
-                                            oeffnen
-                                        </Link>
-                                    </Button>
-                                    <Button asChild variant="outline" size="sm">
-                                        <Link href={`/inventory/${row.id}/edit`}>
-                                            <Pencil className="h-4 w-4" />
-                                            bearbeiten
-                                        </Link>
-                                    </Button>
+                                <div className="grid gap-1">
+                                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Aktionen</p>
+                                    <ActionButtonGroup data-testid={`inventory-row-actions-${row.id}`}>
+                                        <Button asChild variant="outline" size="sm">
+                                            <Link href={`/inventory/${row.id}`}>
+                                                <ExternalLink className="h-4 w-4" />
+                                                oeffnen
+                                            </Link>
+                                        </Button>
+                                        <Button asChild variant="outline" size="sm">
+                                            <Link href={`/inventory/${row.id}/edit`}>
+                                                <Pencil className="h-4 w-4" />
+                                                bearbeiten
+                                            </Link>
+                                        </Button>
+                                        <InventoryItemDeleteAction itemId={row.id} itemName={row.name} buttonVariant="destructive" />
+                                    </ActionButtonGroup>
                                 </div>
                             </article>
                         ))}
                     </div>
 
                     <div className="hidden xl:block">
-                        <Table data-testid="inventory-table" className="min-w-[44rem] lg:min-w-[52rem]">
+                        <Table data-testid="inventory-table" className="min-w-176 lg:min-w-208">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Code</TableHead>
@@ -91,8 +102,7 @@ export default async function InventoryPage() {
                                     <TableHead>Gesamt</TableHead>
                                     <TableHead>Vermietet</TableHead>
                                     <TableHead>Verfuegbar</TableHead>
-                                    <TableHead>Details</TableHead>
-                                    <TableHead>Bearbeiten</TableHead>
+                                    <TableHead>Aktionen</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -107,20 +117,21 @@ export default async function InventoryPage() {
                                         <TableCell data-testid={`inventory-row-rented-${row.id}`}>{row.rented}</TableCell>
                                         <TableCell data-testid={`inventory-row-available-${row.id}`}>{row.available}</TableCell>
                                         <TableCell>
-                                            <Button asChild variant="outline" size="sm">
-                                                <Link href={`/inventory/${row.id}`}>
-                                                    <ExternalLink className="h-4 w-4" />
-                                                    oeffnen
-                                                </Link>
-                                            </Button>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button asChild variant="outline" size="sm">
-                                                <Link href={`/inventory/${row.id}/edit`}>
-                                                    <Pencil className="h-4 w-4" />
-                                                    bearbeiten
-                                                </Link>
-                                            </Button>
+                                            <ActionButtonGroup data-testid={`inventory-row-actions-${row.id}`}>
+                                                <Button asChild variant="outline" size="sm">
+                                                    <Link href={`/inventory/${row.id}`}>
+                                                        <ExternalLink className="h-4 w-4" />
+                                                        oeffnen
+                                                    </Link>
+                                                </Button>
+                                                <Button asChild variant="outline" size="sm">
+                                                    <Link href={`/inventory/${row.id}/edit`}>
+                                                        <Pencil className="h-4 w-4" />
+                                                        bearbeiten
+                                                    </Link>
+                                                </Button>
+                                                <InventoryItemDeleteAction itemId={row.id} itemName={row.name} buttonVariant="destructive" />
+                                            </ActionButtonGroup>
                                         </TableCell>
                                     </TableRow>
                                 ))}

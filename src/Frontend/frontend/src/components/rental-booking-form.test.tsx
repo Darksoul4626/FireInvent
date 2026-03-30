@@ -29,10 +29,7 @@ describe("RentalBookingForm", () => {
 
     it("shows validation error when end date is before start date", async () => {
         const user = userEvent.setup();
-        const fetchMock = vi.fn(async () => ({
-            ok: true,
-            json: async () => ({ availableQuantity: 5, reservedOrRentedQuantity: 3, totalQuantity: 8 })
-        }));
+        const fetchMock = vi.fn();
         vi.stubGlobal("fetch", fetchMock);
 
         render(<RentalBookingForm mode="create" itemOptions={itemOptions} />);
@@ -55,16 +52,7 @@ describe("RentalBookingForm", () => {
 
     it("submits create rental payload", async () => {
         const user = userEvent.setup();
-        const fetchMock = vi.fn(async (input: string | URL) => {
-            if (String(input).includes("/availability?")) {
-                return {
-                    ok: true,
-                    json: async () => ({ availableQuantity: 6, reservedOrRentedQuantity: 2, totalQuantity: 8 })
-                };
-            }
-
-            return { ok: true };
-        });
+        const fetchMock = vi.fn(async () => ({ ok: true }));
         vi.stubGlobal("fetch", fetchMock);
 
         render(<RentalBookingForm mode="create" itemOptions={itemOptions} />);
@@ -85,29 +73,36 @@ describe("RentalBookingForm", () => {
         expect(options.method).toBe("POST");
 
         const body = JSON.parse(String(options.body));
-        expect(body.itemId).toBe(itemOptions[0].id);
-        expect(body.quantity).toBe(2);
+        expect(body.lines).toEqual([{ itemId: itemOptions[0].id, quantity: 2 }]);
+        expect(body.borrowerName).toBeNull();
         expect(typeof body.startDate).toBe("string");
         expect(typeof body.endDate).toBe("string");
         expect(pushMock).toHaveBeenCalledWith("/rentals");
         expect(refreshMock).toHaveBeenCalled();
     });
 
-    it("shows total stock and range availability info", async () => {
+    it("adds a second line and submits normalized lines", async () => {
         const user = userEvent.setup();
-        const fetchMock = vi.fn(async () => ({
-            ok: true,
-            json: async () => ({ availableQuantity: 6, reservedOrRentedQuantity: 2, totalQuantity: 8 })
-        }));
+        const fetchMock = vi.fn(async () => ({ ok: true }));
         vi.stubGlobal("fetch", fetchMock);
 
         render(<RentalBookingForm mode="create" itemOptions={itemOptions} />);
 
-        expect(screen.getByTestId("rental-item-total-quantity")).toHaveTextContent("Gesamtbestand: 8");
+        await user.click(screen.getByTestId("rental-add-line-button"));
+
+        const secondQuantityInput = screen.getByTestId("rental-line-quantity-input-1") as HTMLInputElement;
+        await user.clear(secondQuantityInput);
+        await user.type(secondQuantityInput, "3");
 
         await user.type(screen.getByTestId("rental-start-input"), "2026-03-10");
-        await user.type(screen.getByTestId("rental-end-input"), "2026-03-12");
+        await user.type(screen.getByTestId("rental-end-input"), "2026-03-11");
+        await user.click(screen.getByTestId("rental-submit-button"));
 
-        expect(await screen.findByTestId("rental-availability-info")).toHaveTextContent("Verfuegbar im Zeitraum: 6");
+        const submitCall = fetchMock.mock.calls.find(([url]) => String(url) === "/api/proxy/rentals");
+        expect(submitCall).toBeDefined();
+
+        const [, options] = submitCall as [string, RequestInit];
+        const body = JSON.parse(String(options.body));
+        expect(body.lines).toEqual([{ itemId: itemOptions[0].id, quantity: 4 }]);
     });
 });

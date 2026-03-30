@@ -1,19 +1,11 @@
 ## ADDED Requirements
 
 ### Requirement: Rental periods shall be visible in a calendar interface
-The system SHALL provide a calendar view that displays planned and active rental periods for inventory items across configurable date ranges.
+The system SHALL provide a calendar and fallback list/table view that include all relevant rental lifecycle statuses including `Returned` and `Completed`.
 
-#### Scenario: Display rentals in selected month
-- **WHEN** a user opens the calendar and selects a month
-- **THEN** the system MUST display all bookings that overlap with that month
-
-#### Scenario: Filter calendar by item
-- **WHEN** a user applies an item filter in the calendar
-- **THEN** the system MUST show only bookings related to the selected item
-
-#### Scenario: Highlight conflicting overlaps
-- **WHEN** overlapping bookings would exceed available quantity for an item
-- **THEN** the system MUST visually mark the affected entries as conflicts
+#### Scenario: Display returned and completed rentals distinctly
+- **WHEN** a user views rental entries in calendar or fallback table/list
+- **THEN** the system MUST present `Returned` and `Completed` with clearly distinguishable status cues
 
 ### Requirement: Test-targeted calendar UI elements shall expose data-testid attributes
 The system SHALL provide stable `data-testid` attributes on calendar filter and table/list elements targeted by automated tests.

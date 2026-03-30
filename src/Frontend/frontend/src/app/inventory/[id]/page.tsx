@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, Pencil } from "lucide-react";
+import { InventoryItemDeleteAction } from "@/components/inventory-item-delete-action";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getInventoryItem, getItemAvailability } from "@/lib/api/fireinvent-api";
@@ -38,6 +39,7 @@ export default async function InventoryDetailPage({ params }: Readonly<Props>) {
                         Diesen Gegenstand bearbeiten
                     </Link>
                 </Button>
+                <InventoryItemDeleteAction itemId={id} itemName={item.name} redirectPath="/inventory" />
                 <Button asChild variant="outline" size="sm">
                     <Link href={`/calendar?itemId=${id}`}>
                         <CalendarDays className="h-4 w-4" />

@@ -19,6 +19,12 @@ public sealed class InventoryItemRepository(FireInventDbContext dbContext) : IIn
         return dbContext.InventoryItems.SingleOrDefaultAsync(i => i.Id == id, cancellationToken);
     }
 
+    public Task<InventoryCategory?> GetCategoryByNameAsync(string categoryName, CancellationToken cancellationToken)
+    {
+        return dbContext.InventoryCategories
+            .SingleOrDefaultAsync(c => c.Name.ToLower() == categoryName.ToLower(), cancellationToken);
+    }
+
     public Task<bool> ExistsByInventoryCodeAsync(string inventoryCode, CancellationToken cancellationToken)
     {
         return dbContext.InventoryItems
@@ -26,11 +32,25 @@ public sealed class InventoryItemRepository(FireInventDbContext dbContext) : IIn
             .AnyAsync(i => i.InventoryCode == inventoryCode, cancellationToken);
     }
 
-    public Task<bool> HasLinkedRentalsAsync(Guid itemId, CancellationToken cancellationToken)
+    public async Task<bool> HasLinkedRentalsAsync(Guid itemId, CancellationToken cancellationToken)
     {
-        return dbContext.RentalBookings
+        var legacyLinkQuery = dbContext.RentalBookings
             .AsNoTracking()
             .AnyAsync(r => r.ItemId == itemId, cancellationToken);
+
+        var lineLinkQuery = dbContext.RentalBookingLines
+            .AsNoTracking()
+            .AnyAsync(l => l.ItemId == itemId, cancellationToken);
+
+        var legacyLinked = await legacyLinkQuery;
+        var lineLinked = await lineLinkQuery;
+
+        return legacyLinked || lineLinked;
+    }
+
+    public Task AddCategoryAsync(InventoryCategory category, CancellationToken cancellationToken)
+    {
+        return dbContext.InventoryCategories.AddAsync(category, cancellationToken).AsTask();
     }
 
     public Task AddAsync(InventoryItem item, CancellationToken cancellationToken)

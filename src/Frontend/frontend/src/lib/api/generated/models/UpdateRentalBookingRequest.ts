@@ -2,9 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { RentalBookingLineRequest } from './RentalBookingLineRequest';
+import type { RentalStatus } from './RentalStatus';
 export type UpdateRentalBookingRequest = {
     startDate: string;
     endDate: string;
-    quantity: number | string;
+    lines: Array<RentalBookingLineRequest>;
+    borrowerName: string | null;
+    status: RentalStatus;
 };
 

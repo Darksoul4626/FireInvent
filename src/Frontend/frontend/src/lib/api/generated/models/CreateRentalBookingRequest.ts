@@ -2,10 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { RentalBookingLineRequest } from './RentalBookingLineRequest';
 export type CreateRentalBookingRequest = {
-    itemId: string;
     startDate: string;
     endDate: string;
-    quantity: number | string;
+    lines: Array<RentalBookingLineRequest>;
+    borrowerName: string | null;
 };
 

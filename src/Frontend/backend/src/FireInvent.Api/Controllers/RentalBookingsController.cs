@@ -95,6 +95,29 @@ public sealed class RentalBookingsController(IRentalBookingService service) : Co
         return Ok(result.Booking);
     }
 
+    [HttpPost("{id:guid}/return")]
+    public async Task<ActionResult<RentalBookingResponse>> Return(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await service.ReturnAsync(id, cancellationToken);
+        if (result.NotFound)
+        {
+            return NotFound(ApiProblemDetails.NotFound(
+                "Rental booking not found",
+                $"No rental booking exists for id '{id}'.",
+                "rental_not_found"));
+        }
+
+        if (result.ErrorCode is not null)
+        {
+            return Conflict(ApiProblemDetails.Conflict(
+                "Rental return failed",
+                result.ErrorMessage ?? "Rental return conflict.",
+                result.ErrorCode));
+        }
+
+        return Ok(result.Booking);
+    }
+
     [HttpPost("{id:guid}/complete")]
     public async Task<ActionResult<RentalBookingResponse>> Complete(Guid id, CancellationToken cancellationToken)
     {

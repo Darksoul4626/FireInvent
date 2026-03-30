@@ -27,7 +27,9 @@ export function buildInventoryRows(
         const start = new Date(rental.startDate);
         const end = new Date(rental.endDate);
         if (start <= now && now <= end) {
-            rentedByItem.set(rental.itemId, (rentedByItem.get(rental.itemId) ?? 0) + rental.quantity);
+            for (const line of rental.lines) {
+                rentedByItem.set(line.itemId, (rentedByItem.get(line.itemId) ?? 0) + line.quantity);
+            }
         }
     }
 

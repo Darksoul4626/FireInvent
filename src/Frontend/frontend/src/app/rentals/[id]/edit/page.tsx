@@ -55,10 +55,14 @@ export default async function EditRentalPage({ params }: Props) {
                             totalQuantity: item.totalQuantity
                         }))}
                         initialValues={{
-                            itemId: rental.itemId,
+                            borrowerName: rental.borrowerName ?? "",
                             startDate: toLocalInput(rental.startDate),
                             endDate: toLocalInput(rental.endDate),
-                            quantity: rental.quantity
+                            status: rental.status,
+                            lines: rental.lines.map((line) => ({
+                                itemId: line.itemId,
+                                quantity: line.quantity
+                            }))
                         }}
                     />
                 </CardContent>

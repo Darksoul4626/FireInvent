@@ -23,6 +23,7 @@ public sealed class InventoryItemService(IInventoryItemRepository repository) : 
         CancellationToken cancellationToken)
     {
         var code = request.InventoryCode.Trim();
+        var categoryName = request.Category.Trim();
         var exists = await repository.ExistsByInventoryCodeAsync(code, cancellationToken);
         if (exists)
         {
@@ -31,13 +32,16 @@ public sealed class InventoryItemService(IInventoryItemRepository repository) : 
                 $"An item with code '{code}' already exists.");
         }
 
+        var category = await ResolveCategoryAsync(categoryName, cancellationToken);
+
         var now = DateTimeOffset.UtcNow;
         var item = new InventoryItem
         {
             Id = Guid.NewGuid(),
             InventoryCode = code,
             Name = request.Name.Trim(),
-            Category = request.Category.Trim(),
+            Category = category.Name,
+            CategoryId = category.Id,
             Condition = request.Condition,
             Location = request.Location.Trim(),
             TotalQuantity = request.TotalQuantity,
@@ -62,8 +66,11 @@ public sealed class InventoryItemService(IInventoryItemRepository repository) : 
             return InventoryItemServiceResult.Missing();
         }
 
+        var category = await ResolveCategoryAsync(request.Category.Trim(), cancellationToken);
+
         item.Name = request.Name.Trim();
-        item.Category = request.Category.Trim();
+        item.Category = category.Name;
+        item.CategoryId = category.Id;
         item.Condition = request.Condition;
         item.Location = request.Location.Trim();
         item.TotalQuantity = request.TotalQuantity;
@@ -71,6 +78,27 @@ public sealed class InventoryItemService(IInventoryItemRepository repository) : 
 
         await repository.SaveChangesAsync(cancellationToken);
         return InventoryItemServiceResult.Success(ToResponse(item));
+    }
+
+    private async Task<InventoryCategory> ResolveCategoryAsync(string categoryName, CancellationToken cancellationToken)
+    {
+        var existing = await repository.GetCategoryByNameAsync(categoryName, cancellationToken);
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var created = new InventoryCategory
+        {
+            Id = Guid.NewGuid(),
+            Name = categoryName,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        await repository.AddCategoryAsync(created, cancellationToken);
+        return created;
     }
 
     public async Task<InventoryItemServiceResult> DeleteAsync(Guid id, CancellationToken cancellationToken)

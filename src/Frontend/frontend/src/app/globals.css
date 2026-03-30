@@ -100,6 +100,18 @@ a {
     color: #0f766e;
 }
 
+.fi-status-returned {
+    border-color: #fcd34d;
+    background-color: #fffbeb;
+    color: #b45309;
+}
+
+.fi-status-completed {
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+    color: #334155;
+}
+
 .fi-status-conflict {
     border-color: #fecaca;
     background-color: #fef2f2;

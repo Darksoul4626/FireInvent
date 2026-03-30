@@ -1,9 +1,9 @@
 "use client";
 
-import { Loader2, Plus, Save } from "lucide-react";
+import { Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,28 +19,62 @@ type ItemOption = {
     totalQuantity: number;
 };
 
+type FormStatus = "Planned" | "Active" | "Returned" | "Canceled" | "Completed";
+
 type FormValues = {
-    itemId: string;
+    borrowerName: string;
     startDate: string;
     endDate: string;
-    quantity: number;
+    status: FormStatus;
+    lines: Array<{
+        itemId: string;
+        quantity: number;
+    }>;
 };
 
 type Props = {
     mode: Mode;
     rentalId?: string;
     itemOptions: ItemOption[];
-    initialValues?: Partial<FormValues>;
+    initialValues?: Partial<Pick<FormValues, "borrowerName" | "startDate" | "endDate" | "status" | "lines">>;
 };
 
-const baseSchema = z.object({
-    startDate: z.string().min(1),
-    endDate: z.string().min(1),
+const lineSchema = z.object({
+    itemId: z.string().uuid(),
     quantity: z.number().int().min(1)
 });
 
-const createSchema = baseSchema.extend({ itemId: z.string().uuid() });
-const editSchema = baseSchema;
+const baseSchema = z.object({
+    borrowerName: z.string().max(256),
+    startDate: z.string().min(1),
+    endDate: z.string().min(1),
+    lines: z.array(lineSchema).min(1)
+});
+
+const createSchema = baseSchema;
+const editSchema = baseSchema.extend({
+    status: z.enum(["Planned", "Active", "Returned", "Canceled", "Completed"])
+});
+
+const statusToApiValue: Record<FormStatus, number> = {
+    Planned: 0,
+    Active: 1,
+    Returned: 2,
+    Canceled: 3,
+    Completed: 4
+};
+
+function normalizeLines(lines: FormValues["lines"]) {
+    const grouped = new Map<string, number>();
+    for (const line of lines) {
+        grouped.set(line.itemId, (grouped.get(line.itemId) ?? 0) + line.quantity);
+    }
+
+    return Array.from(grouped.entries()).map(([itemId, quantity]) => ({
+        itemId,
+        quantity
+    }));
+}
 
 function toIso(value: string): string {
     const day = value.includes("T") ? value.slice(0, 10) : value;
@@ -52,68 +86,39 @@ function toRangeEndIso(value: string): string {
     return `${day}T23:59:59.999Z`;
 }
 
-function getAvailabilityMessage(info: {
-    loading: boolean;
-    availableQuantity: number | null;
-    reservedOrRentedQuantity: number | null;
-    totalQuantity: number | null;
-    error: string | null;
-}): string {
-    if (info.loading) {
-        return "Verfuegbarkeit wird geladen...";
-    }
-
-    if (info.error) {
-        return info.error;
-    }
-
-    return `Verfuegbar im Zeitraum: ${info.availableQuantity ?? "-"} (Reserviert/Vermietet: ${info.reservedOrRentedQuantity ?? "-"}, Gesamt: ${info.totalQuantity ?? "-"})`;
-}
-
 export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }: Readonly<Props>) {
     const router = useRouter();
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitFieldErrors, setSubmitFieldErrors] = useState<string[]>([]);
-    const [availabilityInfo, setAvailabilityInfo] = useState<{
-        loading: boolean;
-        availableQuantity: number | null;
-        reservedOrRentedQuantity: number | null;
-        totalQuantity: number | null;
-        error: string | null;
-    }>({
-        loading: false,
-        availableQuantity: null,
-        reservedOrRentedQuantity: null,
-        totalQuantity: null,
-        error: null
-    });
 
     const defaults: FormValues = useMemo(
         () => ({
-            itemId: initialValues?.itemId ?? itemOptions[0]?.id ?? "",
+            borrowerName: initialValues?.borrowerName ?? "",
             startDate: initialValues?.startDate ?? "",
             endDate: initialValues?.endDate ?? "",
-            quantity: initialValues?.quantity ?? 1
+            status: initialValues?.status ?? "Planned",
+            lines: initialValues?.lines?.length
+                ? initialValues.lines
+                : [{ itemId: itemOptions[0]?.id ?? "", quantity: 1 }]
         }),
         [initialValues, itemOptions]
     );
 
     const {
+        control,
         register,
         handleSubmit,
         watch,
         formState: { errors, isSubmitting }
     } = useForm<FormValues>({ defaultValues: defaults });
 
-    const selectedItemId = watch("itemId");
-    const selectedStartDate = watch("startDate");
-    const selectedEndDate = watch("endDate");
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: "lines"
+    });
 
-    const selectedItem = useMemo(
-        () => itemOptions.find((item) => item.id === selectedItemId) ?? null,
-        [itemOptions, selectedItemId]
-    );
-    const availabilityMessage = getAvailabilityMessage(availabilityInfo);
+    const watchedLines = watch("lines");
+
     let submitLabel = "Vermietung speichern";
     if (mode === "create") {
         submitLabel = "Vermietung anlegen";
@@ -123,68 +128,12 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
     }
 
     useEffect(() => {
-        if (!selectedItemId || !selectedStartDate || !selectedEndDate) {
-            setAvailabilityInfo({
-                loading: false,
-                availableQuantity: null,
-                reservedOrRentedQuantity: null,
-                totalQuantity: null,
-                error: null
-            });
+        if (fields.length > 0) {
             return;
         }
 
-        let cancelled = false;
-
-        async function loadAvailability() {
-            setAvailabilityInfo((previous) => ({
-                ...previous,
-                loading: true,
-                error: null
-            }));
-
-            const from = toIso(selectedStartDate);
-            const to = toRangeEndIso(selectedEndDate);
-            const query = new URLSearchParams({ from, to }).toString();
-
-            const response = await fetch(`/api/proxy/items/${selectedItemId}/availability?${query}`);
-
-            if (cancelled) {
-                return;
-            }
-
-            if (!response.ok) {
-                setAvailabilityInfo({
-                    loading: false,
-                    availableQuantity: null,
-                    reservedOrRentedQuantity: null,
-                    totalQuantity: null,
-                    error: "Verfuegbarkeit konnte nicht geladen werden."
-                });
-                return;
-            }
-
-            const body = (await response.json()) as {
-                availableQuantity: number;
-                reservedOrRentedQuantity: number;
-                totalQuantity: number;
-            };
-
-            setAvailabilityInfo({
-                loading: false,
-                availableQuantity: Number(body.availableQuantity),
-                reservedOrRentedQuantity: Number(body.reservedOrRentedQuantity),
-                totalQuantity: Number(body.totalQuantity),
-                error: null
-            });
-        }
-
-        void loadAvailability();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [selectedItemId, selectedStartDate, selectedEndDate]);
+        append({ itemId: itemOptions[0]?.id ?? "", quantity: 1 });
+    }, [append, fields.length, itemOptions]);
 
     const onSubmit = handleSubmit(async (values) => {
         setSubmitError(null);
@@ -201,18 +150,22 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
             return;
         }
 
+        const normalizedLines = normalizeLines(values.lines);
+
         const payload =
             mode === "create"
                 ? {
-                    itemId: values.itemId,
                     startDate: toIso(values.startDate),
                     endDate: toRangeEndIso(values.endDate),
-                    quantity: values.quantity
+                    lines: normalizedLines,
+                    borrowerName: values.borrowerName.trim() ? values.borrowerName.trim() : null
                 }
                 : {
                     startDate: toIso(values.startDate),
                     endDate: toRangeEndIso(values.endDate),
-                    quantity: values.quantity
+                    lines: normalizedLines,
+                    borrowerName: values.borrowerName.trim() ? values.borrowerName.trim() : null,
+                    status: statusToApiValue[values.status]
                 };
 
         const url = mode === "create" ? "/api/proxy/rentals" : `/api/proxy/rentals/${rentalId}`;
@@ -238,25 +191,14 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
     return (
         <form data-testid="rental-booking-form" onSubmit={onSubmit} className="grid max-w-3xl gap-4">
             <label className="grid gap-2 text-sm font-semibold">
-                <span>Gegenstand</span>
-                <Select
-                    data-testid="rental-item-select"
-                    {...register("itemId", { required: mode === "create" })}
-                    disabled={mode === "edit"}
-                >
-                    {itemOptions.map((item) => (
-                        <option key={item.id} value={item.id}>
-                            {item.inventoryCode} - {item.name}
-                        </option>
-                    ))}
-                </Select>
+                <span>Leiher (optional)</span>
+                <Input
+                    data-testid="rental-borrower-input"
+                    placeholder="z.B. Feuerwehr Musterstadt"
+                    maxLength={256}
+                    {...register("borrowerName")}
+                />
             </label>
-
-            {selectedItem ? (
-                <p data-testid="rental-item-total-quantity" className="m-0 text-sm">
-                    Gesamtbestand: <strong>{selectedItem.totalQuantity}</strong>
-                </p>
-            ) : null}
 
             <label className="grid gap-2 text-sm font-semibold">
                 <span>Start</span>
@@ -278,27 +220,95 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
                 {errors.endDate ? <span className="text-sm text-red-700 dark:text-red-400">Ende ist erforderlich.</span> : null}
             </label>
 
-            {selectedStartDate && selectedEndDate ? (
-                <div className="grid gap-1">
-                    <p data-testid="rental-availability-info" className="m-0 text-sm">
-                        {availabilityMessage}
-                    </p>
-                    <p data-testid="rental-availability-hint" className="m-0 text-xs text-slate-600 dark:text-slate-300">
-                        Hinweis: Die Verfuegbarkeit wird fuer den gesamten ausgewaehlten Tageszeitraum berechnet.
-                    </p>
-                </div>
+            {mode === "edit" ? (
+                <label className="grid gap-2 text-sm font-semibold">
+                    <span>Status</span>
+                    <Select data-testid="rental-status-select" {...register("status", { required: true })}>
+                        <option value="Planned">Planned</option>
+                        <option value="Active">Active</option>
+                        <option value="Returned">Returned</option>
+                        <option value="Canceled">Canceled</option>
+                        <option value="Completed">Completed</option>
+                    </Select>
+                </label>
             ) : null}
 
-            <label className="grid gap-2 text-sm font-semibold">
-                <span>Menge</span>
-                <Input
-                    data-testid="rental-quantity-input"
-                    type="number"
-                    min={1}
-                    {...register("quantity", { required: true, valueAsNumber: true, min: 1 })}
-                />
-                {errors.quantity ? <span className="text-sm text-red-700 dark:text-red-400">Menge muss groesser 0 sein.</span> : null}
-            </label>
+            <div className="grid gap-3 rounded-md border border-[var(--border)] p-3">
+                <div className="flex items-center justify-between gap-2">
+                    <p className="m-0 text-sm font-semibold">Positionen</p>
+                    <Button
+                        data-testid="rental-add-line-button"
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => append({ itemId: itemOptions[0]?.id ?? "", quantity: 1 })}
+                    >
+                        <Plus className="h-4 w-4" />
+                        Position hinzufuegen
+                    </Button>
+                </div>
+
+                {fields.map((field, index) => {
+                    const selectedItemId = watchedLines?.[index]?.itemId;
+                    const selectedItem = itemOptions.find((item) => item.id === selectedItemId);
+
+                    return (
+                        <div key={field.id} className="grid gap-2 rounded-md border border-[var(--border)] p-3">
+                            <div className="grid gap-2 md:grid-cols-[1fr_170px_auto] md:items-end">
+                                <label className="grid gap-2 text-sm font-semibold">
+                                    <span>Gegenstand</span>
+                                    <Select
+                                        data-testid={index === 0 ? "rental-item-select" : `rental-line-item-select-${index}`}
+                                        {...register(`lines.${index}.itemId`, { required: true })}
+                                    >
+                                        {itemOptions.map((item) => (
+                                            <option key={item.id} value={item.id}>
+                                                {item.inventoryCode} - {item.name}
+                                            </option>
+                                        ))}
+                                    </Select>
+                                </label>
+
+                                <label className="grid gap-2 text-sm font-semibold">
+                                    <span>Menge</span>
+                                    <Input
+                                        data-testid={index === 0 ? "rental-quantity-input" : `rental-line-quantity-input-${index}`}
+                                        type="number"
+                                        min={1}
+                                        {...register(`lines.${index}.quantity`, {
+                                            required: true,
+                                            valueAsNumber: true,
+                                            min: 1
+                                        })}
+                                    />
+                                </label>
+
+                                <Button
+                                    data-testid={`rental-remove-line-button-${index}`}
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => remove(index)}
+                                    disabled={fields.length <= 1}
+                                    aria-label={`Position ${index + 1} entfernen`}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+
+                            {selectedItem ? (
+                                <p className="m-0 text-xs text-slate-600 dark:text-slate-300">
+                                    Bestand fuer diesen Gegenstand: {selectedItem.totalQuantity}
+                                </p>
+                            ) : null}
+                        </div>
+                    );
+                })}
+
+                {errors.lines ? (
+                    <p className="m-0 text-sm text-red-700 dark:text-red-400">Mindestens eine gueltige Position ist erforderlich.</p>
+                ) : null}
+            </div>
 
             {submitError ? <p className="m-0 text-sm text-red-700 dark:text-red-400">{submitError}</p> : null}
             {submitFieldErrors.length > 0 ? (

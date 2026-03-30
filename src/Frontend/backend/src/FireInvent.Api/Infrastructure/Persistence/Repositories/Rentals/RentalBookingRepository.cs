@@ -10,6 +10,7 @@ public sealed class RentalBookingRepository(FireInventDbContext dbContext) : IRe
     public async Task<IReadOnlyList<RentalBooking>> GetAllAsync(CancellationToken cancellationToken)
     {
         return await dbContext.RentalBookings
+            .Include(r => r.Lines)
             .AsNoTracking()
             .OrderBy(r => r.StartDate)
             .ToListAsync(cancellationToken);
@@ -17,7 +18,9 @@ public sealed class RentalBookingRepository(FireInventDbContext dbContext) : IRe
 
     public Task<RentalBooking?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        return dbContext.RentalBookings.SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+        return dbContext.RentalBookings
+            .Include(r => r.Lines)
+            .SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
     public Task<bool> ItemExistsAsync(Guid itemId, CancellationToken cancellationToken)
@@ -36,7 +39,6 @@ public sealed class RentalBookingRepository(FireInventDbContext dbContext) : IRe
     {
         var query = dbContext.RentalBookings
             .AsNoTracking()
-            .Where(r => r.ItemId == itemId)
             .Where(r => r.Status == RentalStatus.Planned || r.Status == RentalStatus.Active)
             .Where(r => r.StartDate <= to && r.EndDate >= from);
 
@@ -45,11 +47,23 @@ public sealed class RentalBookingRepository(FireInventDbContext dbContext) : IRe
             query = query.Where(r => r.Id != excludeBookingId.Value);
         }
 
-        var sum = await query
+        var bookingIdsQuery = query.Select(r => r.Id);
+
+        var lineSum = await dbContext.RentalBookingLines
+            .AsNoTracking()
+            .Where(l => l.ItemId == itemId)
+            .Where(l => bookingIdsQuery.Contains(l.RentalBookingId))
+            .Select(l => (int?)l.Quantity)
+            .SumAsync(cancellationToken);
+
+        // Fallback for legacy rows without lines during migration phase.
+        var legacySum = await query
+            .Where(r => r.ItemId == itemId)
+            .Where(r => !dbContext.RentalBookingLines.Any(l => l.RentalBookingId == r.Id))
             .Select(r => (int?)r.Quantity)
             .SumAsync(cancellationToken);
 
-        return sum ?? 0;
+        return (lineSum ?? 0) + (legacySum ?? 0);
     }
 
     public Task AddAsync(RentalBooking booking, CancellationToken cancellationToken)

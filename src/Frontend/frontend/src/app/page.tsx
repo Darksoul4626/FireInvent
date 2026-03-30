@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function Page() {
     return (
@@ -18,9 +19,9 @@ export default function Page() {
                         <CardDescription>Bestand, Zustand und Standorte im Blick behalten.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Link className="text-sm font-semibold text-red-700 hover:underline dark:text-red-400" href="/inventory">
-                            Zur Inventarliste
-                        </Link>
+                        <Button asChild size="sm">
+                            <Link href="/inventory">Zur Inventarliste</Link>
+                        </Button>
                     </CardContent>
                 </Card>
 
@@ -30,9 +31,9 @@ export default function Page() {
                         <CardDescription>Buchungen verwalten und Lifecycle-Aktionen steuern.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Link className="text-sm font-semibold text-red-700 hover:underline dark:text-red-400" href="/rentals">
-                            Zur Vermietungsliste
-                        </Link>
+                        <Button asChild size="sm">
+                            <Link href="/rentals">Zur Vermietungsliste</Link>
+                        </Button>
                     </CardContent>
                 </Card>
 
@@ -42,9 +43,9 @@ export default function Page() {
                         <CardDescription>Zeitraeume und Konflikte visuell pruefen.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <Link className="text-sm font-semibold text-red-700 hover:underline dark:text-red-400" href="/calendar">
-                            Zum Vermietungskalender
-                        </Link>
+                        <Button asChild size="sm">
+                            <Link href="/calendar">Zum Vermietungskalender</Link>
+                        </Button>
                     </CardContent>
                 </Card>
             </div>

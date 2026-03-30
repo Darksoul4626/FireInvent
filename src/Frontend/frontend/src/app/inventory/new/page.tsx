@@ -3,8 +3,13 @@ import { ArrowLeft } from "lucide-react";
 import { InventoryItemForm } from "@/components/inventory-item-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getInventoryCategories } from "@/lib/api/fireinvent-api";
 
-export default function NewInventoryItemPage() {
+export const dynamic = "force-dynamic";
+
+export default async function NewInventoryItemPage() {
+    const categories = await getInventoryCategories();
+
     return (
         <section className="grid max-w-3xl gap-4">
             <div>
@@ -21,7 +26,13 @@ export default function NewInventoryItemPage() {
                     <CardDescription>Neuen Inventargegenstand mit allen Stammdaten erfassen.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <InventoryItemForm mode="create" />
+                    <InventoryItemForm
+                        mode="create"
+                        categoryOptions={categories.map((category) => ({
+                            id: category.id,
+                            name: category.name
+                        }))}
+                    />
                 </CardContent>
             </Card>
         </section>

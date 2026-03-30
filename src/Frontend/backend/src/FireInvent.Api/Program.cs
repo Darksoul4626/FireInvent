@@ -1,4 +1,5 @@
 using FireInvent.Api.Application.Services.Availability;
+using FireInvent.Api.Application.Services.Categories;
 using FireInvent.Api.Application.Services.InventoryItems;
 using FireInvent.Api.Application.Services.Rentals;
 using FireInvent.Api.Domain.Repositories;
@@ -54,6 +55,8 @@ else
 }
 builder.Services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();
 builder.Services.AddScoped<IInventoryItemService, InventoryItemService>();
+builder.Services.AddScoped<IInventoryCategoryRepository, InventoryCategoryRepository>();
+builder.Services.AddScoped<IInventoryCategoryService, InventoryCategoryService>();
 builder.Services.AddScoped<IRentalBookingRepository, RentalBookingRepository>();
 builder.Services.AddScoped<IRentalBookingService, RentalBookingService>();
 builder.Services.AddScoped<IItemAvailabilityService, ItemAvailabilityService>();

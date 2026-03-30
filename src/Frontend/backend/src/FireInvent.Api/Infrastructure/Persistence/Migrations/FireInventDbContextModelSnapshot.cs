@@ -22,6 +22,40 @@ namespace FireInvent.Api.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FireInvent.Api.Domain.Entities.InventoryCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("inventory_categories", (string)null);
+                });
+
             modelBuilder.Entity("FireInvent.Api.Domain.Entities.InventoryItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -35,6 +69,10 @@ namespace FireInvent.Api.Infrastructure.Persistence.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
                         .HasColumnName("category");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
 
                     b.Property<string>("Condition")
                         .IsRequired()
@@ -78,6 +116,8 @@ namespace FireInvent.Api.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("InventoryCode")
                         .IsUnique();
 
@@ -94,6 +134,11 @@ namespace FireInvent.Api.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id")
                         .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("BorrowerName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("borrower_name");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -141,6 +186,52 @@ namespace FireInvent.Api.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FireInvent.Api.Domain.Entities.RentalBookingLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("item_id");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("RentalBookingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("rental_booking_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("RentalBookingId");
+
+                    b.HasIndex("RentalBookingId", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("rental_booking_lines", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_rental_booking_lines_quantity_positive", "quantity > 0");
+                        });
+                });
+
+            modelBuilder.Entity("FireInvent.Api.Domain.Entities.InventoryItem", b =>
+                {
+                    b.HasOne("FireInvent.Api.Domain.Entities.InventoryCategory", "CategoryEntity")
+                        .WithMany("Items")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CategoryEntity");
+                });
+
             modelBuilder.Entity("FireInvent.Api.Domain.Entities.RentalBooking", b =>
                 {
                     b.HasOne("FireInvent.Api.Domain.Entities.InventoryItem", "Item")
@@ -152,9 +243,40 @@ namespace FireInvent.Api.Infrastructure.Persistence.Migrations
                     b.Navigation("Item");
                 });
 
+            modelBuilder.Entity("FireInvent.Api.Domain.Entities.RentalBookingLine", b =>
+                {
+                    b.HasOne("FireInvent.Api.Domain.Entities.InventoryItem", "Item")
+                        .WithMany("RentalBookingLines")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FireInvent.Api.Domain.Entities.RentalBooking", "RentalBooking")
+                        .WithMany("Lines")
+                        .HasForeignKey("RentalBookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("RentalBooking");
+                });
+
+            modelBuilder.Entity("FireInvent.Api.Domain.Entities.InventoryCategory", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("FireInvent.Api.Domain.Entities.InventoryItem", b =>
                 {
+                    b.Navigation("RentalBookingLines");
+
                     b.Navigation("RentalBookings");
+                });
+
+            modelBuilder.Entity("FireInvent.Api.Domain.Entities.RentalBooking", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

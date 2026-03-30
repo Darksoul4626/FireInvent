@@ -19,7 +19,11 @@ public sealed class RentalBookingServiceTests
         var service = new RentalBookingService(rentalRepository, inventoryRepository);
 
         var result = await service.CreateAsync(
-            new CreateRentalBookingRequest(Guid.NewGuid(), DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1), 1),
+            new CreateRentalBookingRequest(
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(1),
+                [new RentalBookingLineRequest(Guid.NewGuid(), 1)],
+                null),
             CancellationToken.None);
 
         Assert.Equal("item_not_found", result.ErrorCode);
@@ -50,7 +54,11 @@ public sealed class RentalBookingServiceTests
         var service = new RentalBookingService(rentalRepository, inventoryRepository);
 
         var result = await service.CreateAsync(
-            new CreateRentalBookingRequest(itemId, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(2), 2),
+            new CreateRentalBookingRequest(
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(2),
+                [new RentalBookingLineRequest(itemId, 2)],
+                null),
             CancellationToken.None);
 
         Assert.Equal("stock_conflict", result.ErrorCode);
@@ -70,7 +78,11 @@ public sealed class RentalBookingServiceTests
         var service = new RentalBookingService(rentalRepository, inventoryRepository);
 
         var result = await service.CreateAsync(
-            new CreateRentalBookingRequest(itemId, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1), 2),
+            new CreateRentalBookingRequest(
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(1),
+                [new RentalBookingLineRequest(itemId, 2)],
+                null),
             CancellationToken.None);
 
         Assert.NotNull(result.Booking);
@@ -123,7 +135,7 @@ public sealed class RentalBookingServiceTests
             StartDate = DateTimeOffset.UtcNow,
             EndDate = DateTimeOffset.UtcNow.AddDays(1),
             Quantity = 2,
-            Status = RentalStatus.Planned,
+            Status = RentalStatus.Returned,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         };
@@ -172,7 +184,12 @@ public sealed class RentalBookingServiceTests
 
         var result = await service.UpdateAsync(
             bookingId,
-            new UpdateRentalBookingRequest(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(2), 1),
+            new UpdateRentalBookingRequest(
+                DateTimeOffset.UtcNow,
+                DateTimeOffset.UtcNow.AddDays(2),
+                [new RentalBookingLineRequest(itemId, 1)],
+                null,
+                RentalStatus.Completed),
             CancellationToken.None);
 
         Assert.Equal("invalid_rental_state", result.ErrorCode);
@@ -218,7 +235,12 @@ public sealed class RentalBookingServiceTests
 
         var result = await service.UpdateAsync(
             bookingId,
-            new UpdateRentalBookingRequest(now, now.AddDays(3), 2),
+            new UpdateRentalBookingRequest(
+                now,
+                now.AddDays(3),
+                [new RentalBookingLineRequest(itemId, 2)],
+                null,
+                RentalStatus.Planned),
             CancellationToken.None);
 
         Assert.Equal("stock_conflict", result.ErrorCode);

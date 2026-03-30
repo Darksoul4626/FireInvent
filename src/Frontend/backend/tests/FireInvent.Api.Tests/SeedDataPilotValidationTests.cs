@@ -62,7 +62,11 @@ public sealed class SeedDataPilotValidationTests
         var to = from.AddDays(2);
 
         var createResult = await rentalService.CreateAsync(
-            new CreateRentalBookingRequest(generatorId, from, to, 4),
+            new CreateRentalBookingRequest(
+                from,
+                to,
+                [new RentalBookingLineRequest(generatorId, 4)],
+                null),
             CancellationToken.None);
 
         Assert.Equal("stock_conflict", createResult.ErrorCode);

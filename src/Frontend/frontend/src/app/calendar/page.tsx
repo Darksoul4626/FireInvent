@@ -4,9 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getInventoryItems, getRentalBookings } from "@/lib/api/fireinvent-api";
 import type { RentalStatus } from "@/lib/api/fireinvent-api";
 
+type VisibleCalendarStatus = Exclude<RentalStatus, "Canceled">;
+
 export const dynamic = "force-dynamic";
 
-function isCalendarStatus(status: RentalStatus): status is "Planned" | "Active" {
+function isVisibleCalendarStatus(status: RentalStatus): status is VisibleCalendarStatus {
+    return status !== "Canceled";
+}
+
+function isStockRelevantStatus(status: RentalStatus): status is "Planned" | "Active" {
     return status === "Planned" || status === "Active";
 }
 
@@ -16,12 +22,13 @@ type Props = {
 
 type CalendarRental = {
     id: string;
+    rentalId: string;
     itemId: string;
     itemLabel: string;
     startDate: string;
     endDate: string;
     quantity: number;
-    status: "Planned" | "Active";
+    status: VisibleCalendarStatus;
 };
 
 type TimePoint = {
@@ -100,21 +107,29 @@ export default async function RentalCalendarPage({ searchParams }: Props) {
     const selectedItemId = items.some((item) => item.id === requestedItemId) ? requestedItemId : undefined;
 
     const baseCalendarRentals: CalendarRental[] = rentals
-        .filter((rental) => isCalendarStatus(rental.status))
-        .map((rental) => ({
-            id: rental.id,
-            itemId: rental.itemId,
-            itemLabel: itemMap.get(rental.itemId) ?? rental.itemId,
-            startDate: rental.startDate,
-            endDate: rental.endDate,
-            quantity: rental.quantity,
-            status: rental.status as "Planned" | "Active"
-        }));
+        .filter((rental) => isVisibleCalendarStatus(rental.status))
+        .flatMap((rental, rentalIndex) => {
+            const status = rental.status as VisibleCalendarStatus;
+            return rental.lines.map((line, lineIndex) => ({
+                id: `${rental.id}-${line.itemId}-${rentalIndex}-${lineIndex}`,
+                rentalId: rental.id,
+                itemId: line.itemId,
+                itemLabel: itemMap.get(line.itemId) ?? line.itemId,
+                startDate: rental.startDate,
+                endDate: rental.endDate,
+                quantity: line.quantity,
+                status
+            }));
+        });
 
     const conflictIds = new Set<string>();
     const rentalsByItem = new Map<string, CalendarRental[]>();
 
     for (const rental of baseCalendarRentals) {
+        if (!isStockRelevantStatus(rental.status)) {
+            continue;
+        }
+
         const list = rentalsByItem.get(rental.itemId) ?? [];
         list.push(rental);
         rentalsByItem.set(rental.itemId, list);
@@ -154,7 +169,7 @@ export default async function RentalCalendarPage({ searchParams }: Props) {
                 <CardHeader>
                     <CardTitle>Vermietungskalender</CardTitle>
                     <CardDescription>
-                        Zeigt geplante und aktive Vermietungen fuer ausgewaehlte Zeitraeume (Monat/Woche/Tag).
+                        Zeigt relevante Vermietungen inkl. Rueckgabe- und Abschlussstatus fuer ausgewaehlte Zeitraeume.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

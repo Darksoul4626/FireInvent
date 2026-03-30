@@ -9,11 +9,6 @@ export const $RentalBookingResponse = {
             isRequired: true,
             format: 'uuid',
         },
-        itemId: {
-            type: 'string',
-            isRequired: true,
-            format: 'uuid',
-        },
         startDate: {
             type: 'string',
             isRequired: true,
@@ -24,11 +19,17 @@ export const $RentalBookingResponse = {
             isRequired: true,
             format: 'date-time',
         },
-        quantity: {
-            type: 'number | string',
+        lines: {
+            type: 'array',
+            contains: {
+                type: 'RentalBookingLineResponse',
+            },
             isRequired: true,
-            format: 'int32',
-            pattern: '^-?(?:0|[1-9]\\d*)$',
+        },
+        borrowerName: {
+            type: 'string',
+            isRequired: true,
+            isNullable: true,
         },
         status: {
             type: 'RentalStatus',

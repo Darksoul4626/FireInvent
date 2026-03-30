@@ -7,10 +7,28 @@ public sealed class UpdateRentalBookingRequestValidator : AbstractValidator<Upda
 {
     public UpdateRentalBookingRequestValidator()
     {
-        RuleFor(x => x.Quantity)
-            .GreaterThan(0);
+        RuleFor(x => x.Lines)
+            .NotNull()
+            .Must(lines => lines is { Count: > 0 })
+            .WithMessage("At least one rental line is required.");
+
+        RuleForEach(x => x.Lines)
+            .ChildRules(line =>
+            {
+                line.RuleFor(l => l.ItemId)
+                    .NotEqual(Guid.Empty);
+
+                line.RuleFor(l => l.Quantity)
+                    .GreaterThan(0);
+            });
 
         RuleFor(x => x.EndDate)
             .GreaterThanOrEqualTo(x => x.StartDate);
+
+        RuleFor(x => x.BorrowerName)
+            .MaximumLength(256);
+
+        RuleFor(x => x.Status)
+            .IsInEnum();
     }
 }

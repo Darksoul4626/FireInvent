@@ -14,3 +14,14 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         return toApiErrorResponse(error, "Inventory item update failed");
     }
 }
+
+export async function DELETE(_: Request, context: { params: Promise<{ id: string }> }) {
+    const { id } = await context.params;
+    try {
+        configureOpenApiClient();
+        await InventoryItemsService.deleteApiItems({ id });
+        return new NextResponse(null, { status: 204 });
+    } catch (error) {
+        return toApiErrorResponse(error, "Inventory item delete failed");
+    }
+}

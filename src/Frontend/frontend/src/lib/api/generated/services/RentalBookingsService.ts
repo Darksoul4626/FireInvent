@@ -94,6 +94,23 @@ export class RentalBookingsService {
      * @returns RentalBookingResponse OK
      * @throws ApiError
      */
+    public static postApiRentalsReturn({
+        id,
+    }: {
+        id: string,
+    }): CancelablePromise<RentalBookingResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/rentals/{id}/return',
+            path: {
+                'id': id,
+            },
+        });
+    }
+    /**
+     * @returns RentalBookingResponse OK
+     * @throws ApiError
+     */
     public static postApiRentalsComplete({
         id,
     }: {

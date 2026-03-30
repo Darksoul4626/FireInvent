@@ -14,6 +14,11 @@ vi.mock("@/lib/api/api-error", () => ({
 }));
 
 describe("InventoryItemForm", () => {
+    const categoryOptions = [
+        { id: "cat-1", name: "Wasser" },
+        { id: "cat-2", name: "Rescue" }
+    ];
+
     beforeEach(() => {
         vi.clearAllMocks();
     });
@@ -26,11 +31,11 @@ describe("InventoryItemForm", () => {
         }));
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<InventoryItemForm mode="create" />);
+        render(<InventoryItemForm mode="create" categoryOptions={categoryOptions} />);
 
         await user.type(screen.getByTestId("inventory-code-input"), "  INV-100  ");
         await user.type(screen.getByTestId("inventory-name-input"), "  Schlauch  ");
-        await user.type(screen.getByTestId("inventory-category-input"), "  Wasser  ");
+        await user.selectOptions(screen.getByTestId("inventory-category-select"), "Wasser");
         await user.selectOptions(screen.getByTestId("inventory-condition-select"), "Good");
         await user.type(screen.getByTestId("inventory-location-input"), "  Lager  ");
 
@@ -71,10 +76,11 @@ describe("InventoryItemForm", () => {
             <InventoryItemForm
                 mode="edit"
                 itemId="item-2"
+                categoryOptions={categoryOptions}
                 initialValues={{
                     inventoryCode: "INV-2",
                     name: "Alt",
-                    category: "Alt",
+                    category: "Rescue",
                     condition: "Good",
                     location: "Alt",
                     totalQuantity: 1

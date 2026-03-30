@@ -1,11 +1,10 @@
 import { test, expect } from "@playwright/test";
-
-function toInputDate(date: Date): string {
-    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
-    return local.toISOString().slice(0, 10);
-}
+import { fillRentalDateRange, fillRentalQuantity } from "./utils/form-actions";
+import { rowById, rowCellById } from "./utils/locators";
 
 test("item create -> rent -> complete -> availability update", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+
     const suffix = `${Date.now()}`;
     const itemCode = `E2E-${suffix}`;
     const itemName = `Generator ${suffix}`;
@@ -33,13 +32,13 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
 
     await page.goto("/rentals/new");
 
-    await page.getByTestId("rental-item-select").selectOption(itemId);
+    const createdItemLabel = `${itemCode} - ${itemName}`;
+    await page.getByTestId("rental-item-select").selectOption({ label: createdItemLabel });
 
     const start = new Date("2099-01-10T09:00:00.000Z");
     const end = new Date("2099-01-10T18:00:00.000Z");
-    await page.getByTestId("rental-start-input").fill(toInputDate(start));
-    await page.getByTestId("rental-end-input").fill(toInputDate(end));
-    await page.getByTestId("rental-quantity-input").fill("2");
+    await fillRentalDateRange(page, start, end);
+    await fillRentalQuantity(page, 2);
 
     const createResponsePromise = page.waitForResponse((response) => {
         return response.url().includes("/api/proxy/rentals") && response.request().method() === "POST";
@@ -52,8 +51,10 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
 
     await expect(page).toHaveURL(/\/rentals$/);
 
-    await expect(page.getByTestId(`rental-row-item-${createdRental.id}`)).toContainText(/E2E-\d+\s-\sGenerator\s\d+/);
-    await expect(page.getByTestId(`rental-row-status-${createdRental.id}`)).toHaveText("Planned");
+    const rentalRow = rowById(page, "rental-row", createdRental.id);
+    await expect(rentalRow).toBeVisible();
+    await expect(rowCellById(page, "rental-row", "rental-row-item", createdRental.id)).toContainText(createdItemLabel);
+    await expect(rowCellById(page, "rental-row", "rental-row-status", createdRental.id)).toHaveText("Planned");
 
     const completeResponse = await page.request.post(
         `http://localhost:5153/api/rentals/${createdRental.id}/complete`
@@ -61,7 +62,9 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
     expect(completeResponse.ok()).toBeTruthy();
 
     await page.goto("/inventory");
-    await expect(page.getByTestId(`inventory-row-total-${itemId}`)).toHaveText("3");
-    await expect(page.getByTestId(`inventory-row-rented-${itemId}`)).toHaveText("0");
-    await expect(page.getByTestId(`inventory-row-available-${itemId}`)).toHaveText("3");
+    const inventoryRow = rowById(page, "inventory-row", itemId);
+    await expect(inventoryRow).toBeVisible();
+    await expect(rowCellById(page, "inventory-row", "inventory-row-total", itemId)).toHaveText("3");
+    await expect(rowCellById(page, "inventory-row", "inventory-row-rented", itemId)).toHaveText("0");
+    await expect(rowCellById(page, "inventory-row", "inventory-row-available", itemId)).toHaveText("3");
 });

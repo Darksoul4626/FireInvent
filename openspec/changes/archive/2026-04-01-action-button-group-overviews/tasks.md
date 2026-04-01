@@ -22,4 +22,4 @@
 - [x] 4.1 Update and pass frontend unit tests for affected action-rendering components and table views (`npm run test:unit`).
 - [x] 4.2 Update and pass affected Playwright flows for inventory/rental action interactions (`npm run test:e2e`).
 - [x] 4.3 Validate responsive and keyboard interaction behavior on affected overviews (desktop and narrow viewport).
-- [ ] 4.4 Run frontend quality checks and build (`npm run lint`, `npm run build`) and verify API contract sync remains clean (`npm run check:api-contract-sync`).
+- [x] 4.4 Run frontend build (`npm run build`) and verify API contract sync remains clean (`npm run check:api-contract-sync`); linting intentionally skipped per user request.

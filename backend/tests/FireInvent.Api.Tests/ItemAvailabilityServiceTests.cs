@@ -117,4 +117,64 @@ public sealed class ItemAvailabilityServiceTests
         Assert.NotNull(result.Availability);
         Assert.Equal(0, result.Availability.AvailableQuantity);
     }
+
+    [Fact]
+    public async Task GetAsync_ExcludesBooking_WhenExcludeBookingIdIsProvided()
+    {
+        var itemId = Guid.NewGuid();
+        var bookingId = Guid.NewGuid();
+        await using var dbContext = TestDbContextFactory.Create("availability-tests");
+        var now = DateTimeOffset.UtcNow;
+
+        await dbContext.InventoryItems.AddAsync(new InventoryItem
+        {
+            Id = itemId,
+            InventoryCode = "INV-4",
+            Name = "Floodlight",
+            Category = "Lighting",
+            Condition = ItemCondition.Good,
+            Location = "Rack",
+            TotalQuantity = 3,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        await dbContext.RentalBookings.AddAsync(new RentalBooking
+        {
+            Id = bookingId,
+            ItemId = itemId,
+            StartDate = now,
+            EndDate = now.AddDays(2),
+            Quantity = 2,
+            Status = RentalStatus.Planned,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        await dbContext.SaveChangesAsync();
+
+        var inventoryRepository = new InventoryItemRepository(dbContext);
+        var rentalRepository = new RentalBookingRepository(dbContext);
+        var service = new ItemAvailabilityService(inventoryRepository, rentalRepository);
+
+        var withoutExclusion = await service.GetAsync(
+            itemId,
+            now,
+            now.AddDays(2),
+            CancellationToken.None);
+
+        var withExclusion = await service.GetAsync(
+            itemId,
+            now,
+            now.AddDays(2),
+            CancellationToken.None,
+            bookingId);
+
+        Assert.NotNull(withoutExclusion.Availability);
+        Assert.Equal(1, withoutExclusion.Availability.AvailableQuantity);
+
+        Assert.NotNull(withExclusion.Availability);
+        Assert.Equal(3, withExclusion.Availability.AvailableQuantity);
+        Assert.Equal(0, withExclusion.Availability.ReservedOrRentedQuantity);
+    }
 }

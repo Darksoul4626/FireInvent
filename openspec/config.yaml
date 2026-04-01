@@ -11,6 +11,7 @@ context: |
   Key conventions:
   - API-first workflow: backend OpenAPI is source of truth; frontend client is generated.
   - Layered backend architecture: Controllers -> Services -> Repositories.
+  - Caching belongs to API/controller boundaries; services stay cache-agnostic.
   - Controllers must not use DbContext directly.
   - Validation and errors should use consistent ProblemDetails-style responses.
   - Prefer deterministic seed/test data for pilot validation.

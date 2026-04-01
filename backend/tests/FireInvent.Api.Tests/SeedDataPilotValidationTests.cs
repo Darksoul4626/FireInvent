@@ -55,7 +55,10 @@ public sealed class SeedDataPilotValidationTests
 
         var inventoryRepository = new InventoryItemRepository(dbContext);
         var rentalRepository = new RentalBookingRepository(dbContext);
-        var rentalService = new RentalBookingService(rentalRepository, inventoryRepository);
+        var rentalService = new RentalBookingService(
+            rentalRepository,
+            inventoryRepository,
+            new StubBusinessDayBoundary(new DateOnly(2000, 1, 1)));
 
         var generatorId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var from = DateTimeOffset.UtcNow;
@@ -70,5 +73,18 @@ public sealed class SeedDataPilotValidationTests
             CancellationToken.None);
 
         Assert.Equal("stock_conflict", createResult.ErrorCode);
+    }
+
+    private sealed class StubBusinessDayBoundary(DateOnly currentBusinessDate) : IBusinessDayBoundary
+    {
+        public DateOnly GetCurrentBusinessDate()
+        {
+            return currentBusinessDate;
+        }
+
+        public DateOnly ToBusinessDate(DateTimeOffset value)
+        {
+            return DateOnly.FromDateTime(value.UtcDateTime);
+        }
     }
 }

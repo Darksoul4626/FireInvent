@@ -1,18 +1,36 @@
 using FireInvent.Api.Application.Services.Categories;
 using FireInvent.Api.Contracts.Categories;
 using FireInvent.Api.Infrastructure.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FireInvent.Api.Controllers;
 
 [ApiController]
 [Route("api/categories")]
-public sealed class InventoryCategoriesController(IInventoryCategoryService service) : ControllerBase
+public sealed class InventoryCategoriesController(
+    IInventoryCategoryService service,
+    IMemoryCache cache) : ControllerBase
 {
+    private const string CategoryCacheKey = "api:categories:all";
+    private static readonly TimeSpan CategoryCacheDuration = TimeSpan.FromMinutes(5);
+
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<InventoryCategoryResponse>>> GetAll(CancellationToken cancellationToken)
     {
+        if (cache.TryGetValue(CategoryCacheKey, out IReadOnlyList<InventoryCategoryResponse>? cached)
+            && cached is not null)
+        {
+            return Ok(cached);
+        }
+
         var categories = await service.GetAllAsync(cancellationToken);
+
+        cache.Set(CategoryCacheKey, categories, new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = CategoryCacheDuration
+        });
+
         return Ok(categories);
     }
 
@@ -46,6 +64,7 @@ public sealed class InventoryCategoriesController(IInventoryCategoryService serv
         }
 
         var category = result.Category!;
+        InvalidateCategoryCache();
         return CreatedAtAction(nameof(GetById), new { id = category.Id }, category);
     }
 
@@ -72,6 +91,7 @@ public sealed class InventoryCategoriesController(IInventoryCategoryService serv
                 result.ErrorCode));
         }
 
+        InvalidateCategoryCache();
         return Ok(result.Category);
     }
 
@@ -95,6 +115,12 @@ public sealed class InventoryCategoriesController(IInventoryCategoryService serv
                 result.ErrorCode));
         }
 
+        InvalidateCategoryCache();
         return NoContent();
+    }
+
+    private void InvalidateCategoryCache()
+    {
+        cache.Remove(CategoryCacheKey);
     }
 }

@@ -35,7 +35,7 @@ describe("InventoryItemForm", () => {
 
         await user.type(screen.getByTestId("inventory-code-input"), "  INV-100  ");
         await user.type(screen.getByTestId("inventory-name-input"), "  Schlauch  ");
-        await user.selectOptions(screen.getByTestId("inventory-category-select"), "Wasser");
+        await user.type(screen.getByTestId("inventory-category-select"), "Wasser");
         await user.selectOptions(screen.getByTestId("inventory-condition-select"), "Good");
         await user.type(screen.getByTestId("inventory-location-input"), "  Lager  ");
 

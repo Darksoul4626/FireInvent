@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define backend API, persistence, contract, and validation behavior for inventory and rental domain operations.
+
+## Requirements
 
 ### Requirement: Backend API and relational data model shall support inventory and rentals
 The system SHALL expose REST endpoints and persist data in a relational model that links inventory items, stock quantities, and rental bookings.

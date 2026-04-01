@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define how users navigate from the start page into the core application modules.
+
+## Requirements
 
 ### Requirement: Start page module entries shall provide clear button-like navigation links
 The system SHALL provide module entry cards on the start page where navigation is triggered by explicit links styled as buttons, while cards themselves remain non-clickable containers.

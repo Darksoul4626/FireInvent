@@ -1,16 +1,15 @@
-## ADDED Requirements
+## Purpose
+Define expected behavior for inventory category management list interactions.
 
-### Requirement: Categories shall be managed centrally for inventory usage
-The system SHALL allow users to create, list, update, and delete categories used by inventory items.
+## Requirements
 
-#### Scenario: Create category
-- **WHEN** a user creates a category with a valid unique name
-- **THEN** the system MUST persist and expose the new category for inventory selection
+### Requirement: Category list actions shall be grouped where action density warrants it
+The system SHALL group category row actions into a dedicated Aktionen column when two or more direct row-level actions are available.
 
-#### Scenario: Delete unused category
-- **WHEN** a user deletes a category that is not referenced by any inventory item
-- **THEN** the system MUST remove the category
+#### Scenario: Category rows with multiple direct actions use grouped presentation
+- **WHEN** a user views category rows that provide multiple direct actions
+- **THEN** the system MUST render those actions as a grouped pattern in a dedicated Aktionen column
 
-#### Scenario: Reject delete of used category
-- **WHEN** a user deletes a category that is referenced by one or more inventory items
-- **THEN** the system MUST reject the delete operation with a conflict response
+#### Scenario: Single-action category contexts remain ungrouped
+- **WHEN** a category row exposes only one direct action
+- **THEN** the system MUST allow a non-grouped action presentation to avoid unnecessary visual complexity

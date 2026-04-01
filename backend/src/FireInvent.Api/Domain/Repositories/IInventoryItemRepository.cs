@@ -5,6 +5,7 @@ namespace FireInvent.Api.Domain.Repositories;
 public interface IInventoryItemRepository
 {
     Task<IReadOnlyList<InventoryItem>> GetAllAsync(CancellationToken cancellationToken);
+    Task<PagedResult<InventoryOverviewRow>> GetOverviewAsync(InventoryOverviewQuery query, CancellationToken cancellationToken);
     Task<InventoryItem?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<InventoryCategory?> GetCategoryByNameAsync(string categoryName, CancellationToken cancellationToken);
     Task<bool> ExistsByInventoryCodeAsync(string inventoryCode, CancellationToken cancellationToken);

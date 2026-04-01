@@ -4,6 +4,7 @@ using FireInvent.Api.Domain.Entities;
 using FireInvent.Api.Domain.Enums;
 using FireInvent.Api.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FireInvent.Api.Tests;
 
@@ -94,5 +95,35 @@ public sealed class InventoryCategoryServiceTests
             CancellationToken.None);
 
         Assert.Equal("category_name_conflict", result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_RefreshesCacheAfterCreate()
+    {
+        await using var dbContext = TestDbContextFactory.Create("category-tests");
+
+        await dbContext.InventoryCategories.AddAsync(new InventoryCategory
+        {
+            Id = Guid.NewGuid(),
+            Name = "Medical",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        });
+        await dbContext.SaveChangesAsync();
+
+        var repository = new InventoryCategoryRepository(dbContext);
+        var service = new InventoryCategoryService(repository);
+
+        var initial = await service.GetAllAsync(CancellationToken.None);
+        Assert.Single(initial);
+
+        var createResult = await service.CreateAsync(
+            new CreateInventoryCategoryRequest("Rescue"),
+            CancellationToken.None);
+
+        Assert.NotNull(createResult.Category);
+
+        var refreshed = await service.GetAllAsync(CancellationToken.None);
+        Assert.Equal(2, refreshed.Count);
     }
 }

@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { CreateRentalBookingRequest } from '../models/CreateRentalBookingRequest';
+import type { PagedRentalOverviewResponse } from '../models/PagedRentalOverviewResponse';
 import type { RentalBookingResponse } from '../models/RentalBookingResponse';
 import type { UpdateRentalBookingRequest } from '../models/UpdateRentalBookingRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -33,6 +34,41 @@ export class RentalBookingsService {
             url: '/api/rentals',
             body: requestBody,
             mediaType: 'application/json',
+        });
+    }
+    /**
+     * @returns PagedRentalOverviewResponse OK
+     * @throws ApiError
+     */
+    public static getApiRentalsOverview({
+        page,
+        pageSize,
+        search,
+        status,
+        itemId,
+        from,
+        to,
+    }: {
+        page?: number | string,
+        pageSize?: number | string,
+        search?: string,
+        status?: string,
+        itemId?: string,
+        from?: string,
+        to?: string,
+    }): CancelablePromise<PagedRentalOverviewResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/rentals/overview',
+            query: {
+                'Page': page,
+                'PageSize': pageSize,
+                'Search': search,
+                'Status': status,
+                'ItemId': itemId,
+                'From': from,
+                'To': to,
+            },
         });
     }
     /**

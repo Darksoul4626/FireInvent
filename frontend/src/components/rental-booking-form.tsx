@@ -39,6 +39,11 @@ type Props = {
     initialValues?: Partial<Pick<FormValues, "borrowerName" | "startDate" | "endDate" | "status" | "lines">>;
 };
 
+type AvailabilityInfo = {
+    availableQuantity: number;
+    totalQuantity: number;
+};
+
 const lineSchema = z.object({
     itemId: z.string().uuid(),
     quantity: z.number().int().min(1)
@@ -86,10 +91,23 @@ function toRangeEndIso(value: string): string {
     return `${day}T23:59:59.999Z`;
 }
 
+function getBerlinToday(): string {
+    return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Europe/Berlin"
+    }).format(new Date());
+}
+
+function toNumber(value: number | string): number {
+    return typeof value === "number" ? value : Number(value);
+}
+
 export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }: Readonly<Props>) {
     const router = useRouter();
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitFieldErrors, setSubmitFieldErrors] = useState<string[]>([]);
+    const [availabilityByItemId, setAvailabilityByItemId] = useState<Record<string, AvailabilityInfo>>({});
+    const [availabilityLoadingByItemId, setAvailabilityLoadingByItemId] = useState<Record<string, boolean>>({});
+    const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
     const defaults: FormValues = useMemo(
         () => ({
@@ -118,13 +136,61 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
     });
 
     const watchedLines = watch("lines");
+    const watchedStartDate = watch("startDate");
+    const watchedEndDate = watch("endDate");
 
-    let submitLabel = "Vermietung speichern";
-    if (mode === "create") {
-        submitLabel = "Vermietung anlegen";
-    }
+    const berlinToday = useMemo(() => getBerlinToday(), []);
+    const startDateTooEarly = Boolean(watchedStartDate) && watchedStartDate < berlinToday;
+
+    const requestedQuantityByItemId = useMemo(() => {
+        const grouped = new Map<string, number>();
+        for (const line of watchedLines ?? []) {
+            if (!line?.itemId) {
+                continue;
+            }
+
+            const parsedQuantity = Number(line.quantity ?? 1);
+            const normalizedQuantity = Number.isFinite(parsedQuantity)
+                ? Math.max(1, Math.trunc(parsedQuantity))
+                : 1;
+
+            grouped.set(
+                line.itemId,
+                (grouped.get(line.itemId) ?? 0) + normalizedQuantity
+            );
+        }
+
+        return grouped;
+    }, [watchedLines]);
+
+    const conflictByItemId = useMemo(() => {
+        const conflicts = new Map<string, { requested: number; available: number }>();
+
+        for (const [itemId, requested] of requestedQuantityByItemId.entries()) {
+            const availability = availabilityByItemId[itemId];
+            if (!availability) {
+                continue;
+            }
+
+            if (requested > availability.availableQuantity) {
+                conflicts.set(itemId, {
+                    requested,
+                    available: availability.availableQuantity
+                });
+            }
+        }
+
+        return conflicts;
+    }, [availabilityByItemId, requestedQuantityByItemId]);
+
+    const hasAvailabilityConflict = conflictByItemId.size > 0;
+    const hasAvailabilityError = Boolean(availabilityError);
+
+    let submitIcon = <Save className="h-4 w-4" />;
     if (isSubmitting) {
-        submitLabel = "Speichert...";
+        submitIcon = <Loader2 className="h-4 w-4 animate-spin" />;
+    } else if (mode === "create") {
+        submitIcon = <Plus className="h-4 w-4" />;
     }
 
     useEffect(() => {
@@ -134,6 +200,93 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
 
         append({ itemId: itemOptions[0]?.id ?? "", quantity: 1 });
     }, [append, fields.length, itemOptions]);
+
+    useEffect(() => {
+        const itemIds = Array.from(
+            new Set((watchedLines ?? []).map((line) => line.itemId).filter((itemId): itemId is string => Boolean(itemId)))
+        );
+
+        if (!watchedStartDate || !watchedEndDate || itemIds.length === 0 || watchedEndDate < watchedStartDate) {
+            setAvailabilityByItemId({});
+            setAvailabilityLoadingByItemId({});
+            setAvailabilityError(null);
+            return;
+        }
+
+        const controller = new AbortController();
+
+        async function loadAvailability() {
+            setAvailabilityError(null);
+            setAvailabilityLoadingByItemId(Object.fromEntries(itemIds.map((itemId) => [itemId, true])));
+
+            try {
+                const from = toIso(watchedStartDate);
+                const to = toRangeEndIso(watchedEndDate);
+                const excludeBookingId = mode === "edit" && rentalId ? rentalId : null;
+
+                const results = await Promise.all(itemIds.map(async (itemId) => {
+                    const search = new URLSearchParams({
+                        from,
+                        to
+                    });
+
+                    if (excludeBookingId) {
+                        search.set("excludeBookingId", excludeBookingId);
+                    }
+
+                    const response = await fetch(
+                        `/api/proxy/items/${itemId}/availability?${search.toString()}`,
+                        { signal: controller.signal }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error("availability_failed");
+                    }
+
+                    const payload = (await response.json()) as {
+                        availableQuantity: number | string;
+                        totalQuantity: number | string;
+                    };
+
+                    return {
+                        itemId,
+                        availableQuantity: toNumber(payload.availableQuantity),
+                        totalQuantity: toNumber(payload.totalQuantity)
+                    };
+                }));
+
+                if (controller.signal.aborted) {
+                    return;
+                }
+
+                setAvailabilityByItemId(Object.fromEntries(results.map((result) => [result.itemId, {
+                    availableQuantity: result.availableQuantity,
+                    totalQuantity: result.totalQuantity
+                }])));
+            } catch {
+                if (!controller.signal.aborted) {
+                    setAvailabilityByItemId({});
+                    setAvailabilityError("Verfuegbarkeit konnte nicht geladen werden.");
+                }
+            } finally {
+                if (!controller.signal.aborted) {
+                    setAvailabilityLoadingByItemId({});
+                }
+            }
+        }
+
+        void loadAvailability();
+
+        return () => controller.abort();
+    }, [mode, rentalId, watchedLines, watchedStartDate, watchedEndDate]);
+
+    let submitLabel = "Vermietung speichern";
+    if (mode === "create") {
+        submitLabel = "Vermietung anlegen";
+    }
+    if (isSubmitting) {
+        submitLabel = "Speichert...";
+    }
 
     const onSubmit = handleSubmit(async (values) => {
         setSubmitError(null);
@@ -147,6 +300,21 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
 
         if (values.endDate < values.startDate) {
             setSubmitError("Enddatum muss groesser oder gleich Startdatum sein.");
+            return;
+        }
+
+        if (values.startDate < berlinToday) {
+            setSubmitError("Startdatum muss in Europe/Berlin heute oder spaeter sein.");
+            return;
+        }
+
+        if (hasAvailabilityConflict) {
+            setSubmitError("Speichern nicht moeglich: mindestens eine Position uebersteigt die verfuegbare Menge.");
+            return;
+        }
+
+        if (hasAvailabilityError) {
+            setSubmitError("Speichern nicht moeglich: Verfuegbarkeit konnte nicht geladen werden.");
             return;
         }
 
@@ -208,6 +376,11 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
                     {...register("startDate", { required: true })}
                 />
                 {errors.startDate ? <span className="text-sm text-red-700 dark:text-red-400">Start ist erforderlich.</span> : null}
+                {startDateTooEarly ? (
+                    <span className="text-sm text-red-700 dark:text-red-400" data-testid="rental-start-berlin-error">
+                        Startdatum muss in Europe/Berlin heute oder spaeter sein.
+                    </span>
+                ) : null}
             </label>
 
             <label className="grid gap-2 text-sm font-semibold">
@@ -233,7 +406,7 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
                 </label>
             ) : null}
 
-            <div className="grid gap-3 rounded-md border border-[var(--border)] p-3">
+            <div className="grid gap-3 rounded-md border border-(--border) p-3">
                 <div className="flex items-center justify-between gap-2">
                     <p className="m-0 text-sm font-semibold">Positionen</p>
                     <Button
@@ -248,12 +421,19 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
                     </Button>
                 </div>
 
+                {availabilityError ? (
+                    <p className="m-0 text-sm text-red-700 dark:text-red-400" data-testid="rental-availability-error">{availabilityError}</p>
+                ) : null}
+
                 {fields.map((field, index) => {
                     const selectedItemId = watchedLines?.[index]?.itemId;
                     const selectedItem = itemOptions.find((item) => item.id === selectedItemId);
+                    const availability = selectedItemId ? availabilityByItemId[selectedItemId] : undefined;
+                    const isAvailabilityLoading = selectedItemId ? availabilityLoadingByItemId[selectedItemId] : false;
+                    const conflict = selectedItemId ? conflictByItemId.get(selectedItemId) : undefined;
 
                     return (
-                        <div key={field.id} className="grid gap-2 rounded-md border border-[var(--border)] p-3">
+                        <div key={field.id} className="grid gap-2 rounded-md border border-(--border) p-3">
                             <div className="grid gap-2 md:grid-cols-[1fr_170px_auto] md:items-end">
                                 <label className="grid gap-2 text-sm font-semibold">
                                     <span>Gegenstand</span>
@@ -301,6 +481,24 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
                                     Bestand fuer diesen Gegenstand: {selectedItem.totalQuantity}
                                 </p>
                             ) : null}
+
+                            {isAvailabilityLoading ? (
+                                <p className="m-0 text-xs text-slate-600 dark:text-slate-300" data-testid={`rental-line-availability-loading-${index}`}>
+                                    Verfuegbarkeit wird aktualisiert...
+                                </p>
+                            ) : null}
+
+                            {availability ? (
+                                <p className="m-0 text-xs text-slate-600 dark:text-slate-300" data-testid={`rental-line-availability-${index}`}>
+                                    Verfuegbar im Zeitraum: {availability.availableQuantity} / {availability.totalQuantity}
+                                </p>
+                            ) : null}
+
+                            {conflict ? (
+                                <p className="m-0 text-sm text-red-700 dark:text-red-400" data-testid={`rental-line-conflict-${index}`}>
+                                    Konflikt: Angefragt {conflict.requested}, verfuegbar {conflict.available}. Bitte Menge oder Zeitraum anpassen.
+                                </p>
+                            ) : null}
                         </div>
                     );
                 })}
@@ -319,8 +517,13 @@ export function RentalBookingForm({ mode, rentalId, itemOptions, initialValues }
                 </ul>
             ) : null}
 
-            <Button data-testid="rental-submit-button" type="submit" disabled={isSubmitting} className="w-fit">
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "create" ? <Plus className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            <Button
+                data-testid="rental-submit-button"
+                type="submit"
+                disabled={isSubmitting || hasAvailabilityConflict || hasAvailabilityError || startDateTooEarly}
+                className="w-fit"
+            >
+                {submitIcon}
                 {submitLabel}
             </Button>
         </form>

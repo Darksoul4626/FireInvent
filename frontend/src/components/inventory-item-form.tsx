@@ -54,6 +54,9 @@ export function InventoryItemForm({ mode, itemId, categoryOptions, initialValues
     const router = useRouter();
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitFieldErrors, setSubmitFieldErrors] = useState<string[]>([]);
+    const [inlineCategoryError, setInlineCategoryError] = useState<string | null>(null);
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+    const [localCategoryOptions, setLocalCategoryOptions] = useState(categoryOptions);
 
     const defaults: FormValues = useMemo(
         () => ({
@@ -70,8 +73,15 @@ export function InventoryItemForm({ mode, itemId, categoryOptions, initialValues
     const {
         register,
         handleSubmit,
+        watch,
+        setValue,
         formState: { errors, isSubmitting }
     } = useForm<FormValues>({ defaultValues: defaults });
+
+    const categoryValue = watch("category");
+    const normalizedCategory = categoryValue?.trim() ?? "";
+    const hasExistingCategory = localCategoryOptions
+        .some((category) => category.name.toLowerCase() === normalizedCategory.toLowerCase());
 
     let submitLabel = mode === "create" ? "Anlegen" : "Speichern";
     if (isSubmitting) {
@@ -81,6 +91,7 @@ export function InventoryItemForm({ mode, itemId, categoryOptions, initialValues
     const onSubmit = handleSubmit(async (values) => {
         setSubmitError(null);
         setSubmitFieldErrors([]);
+        setInlineCategoryError(null);
 
         const parsed = mode === "create" ? createSchema.safeParse(values) : editSchema.safeParse(values);
         if (!parsed.success) {
@@ -127,6 +138,51 @@ export function InventoryItemForm({ mode, itemId, categoryOptions, initialValues
         router.refresh();
     });
 
+    async function createCategoryInline() {
+        const name = normalizedCategory;
+        if (!name) {
+            setInlineCategoryError("Bitte zuerst einen Kategorienamen eingeben.");
+            return;
+        }
+
+        if (hasExistingCategory) {
+            setInlineCategoryError(null);
+            return;
+        }
+
+        setInlineCategoryError(null);
+        setIsCreatingCategory(true);
+
+        try {
+            const response = await fetch("/api/proxy/categories", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name })
+            });
+
+            if (!response.ok) {
+                const parsed = await parseApiError(response, "Kategorie konnte nicht erstellt werden");
+                setInlineCategoryError(parsed.message);
+                return;
+            }
+
+            const created = (await response.json()) as { id: string; name: string };
+            setLocalCategoryOptions((previous) => {
+                const alreadyPresent = previous.some((entry) => entry.name.toLowerCase() === created.name.toLowerCase());
+                if (alreadyPresent) {
+                    return previous;
+                }
+
+                return [...previous, created]
+                    .sort((a, b) => a.name.localeCompare(b.name, "de"));
+            });
+            setValue("category", created.name, { shouldDirty: true, shouldValidate: true });
+            setInlineCategoryError(null);
+        } finally {
+            setIsCreatingCategory(false);
+        }
+    }
+
     return (
         <form data-testid="inventory-item-form" onSubmit={onSubmit} className="grid max-w-3xl gap-4">
             {mode === "create" ? (
@@ -148,18 +204,35 @@ export function InventoryItemForm({ mode, itemId, categoryOptions, initialValues
 
             <label className="grid gap-2 text-sm font-semibold">
                 Kategorie
-                <Select data-testid="inventory-category-select" {...register("category", { required: true, maxLength: 128 })}>
-                    <option value="">Bitte waehlen</option>
-                    {categoryOptions.map((category) => (
-                        <option key={category.id} value={category.name}>
-                            {category.name}
-                        </option>
+                <Input
+                    data-testid="inventory-category-select"
+                    list="inventory-category-options"
+                    placeholder="Kategorie auswaehlen oder neu eingeben"
+                    {...register("category", { required: true, maxLength: 128 })}
+                />
+                <datalist id="inventory-category-options">
+                    {localCategoryOptions.map((category) => (
+                        <option key={category.id} value={category.name} />
                     ))}
-                </Select>
+                </datalist>
                 {errors.category ? <span className="text-sm text-red-700 dark:text-red-400">Kategorie ist erforderlich (max. 128).</span> : null}
-                <span className="text-xs text-slate-600 dark:text-slate-300">
-                    Kategorie fehlt? <Link href="/inventory/categories" className="font-semibold text-red-700 hover:underline dark:text-red-400">Zur Kategorieverwaltung</Link>
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                        data-testid="inventory-category-create-inline"
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={isCreatingCategory || !normalizedCategory || hasExistingCategory}
+                        onClick={() => void createCategoryInline()}
+                    >
+                        {isCreatingCategory ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                        Kategorie anlegen
+                    </Button>
+                    <span className="text-xs text-slate-600 dark:text-slate-300">
+                        Kategorie fehlt? <Link href="/inventory/categories" className="font-semibold text-red-700 hover:underline dark:text-red-400">Zur Kategorieverwaltung</Link>
+                    </span>
+                </div>
+                {inlineCategoryError ? <span className="text-sm text-red-700 dark:text-red-400">{inlineCategoryError}</span> : null}
             </label>
 
             <label className="grid gap-2 text-sm font-semibold">

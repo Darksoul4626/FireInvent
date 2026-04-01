@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define how rental periods are visualized in calendar and fallback list/table views.
+
+## Requirements
 
 ### Requirement: Rental periods shall be visible in a calendar interface
 The system SHALL provide a calendar and fallback list/table view that include all relevant rental lifecycle statuses including `Returned` and `Completed`.

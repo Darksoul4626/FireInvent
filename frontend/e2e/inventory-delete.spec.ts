@@ -44,6 +44,7 @@ test.describe("inventory delete workflow", () => {
         const deleteResponse = await deleteResponsePromise;
         expect(deleteResponse.status()).toBe(204);
 
+        await page.reload();
         await expect(rowById(page, "inventory-row", createdItem.id)).toHaveCount(0);
     });
 

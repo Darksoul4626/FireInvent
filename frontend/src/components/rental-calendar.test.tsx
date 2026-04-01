@@ -74,4 +74,26 @@ describe("RentalCalendar", () => {
         expect(pushMock).toHaveBeenCalledTimes(1);
         expect(pushMock.mock.calls[0][0]).toContain("itemId=item-2");
     });
+
+    it("does not render conflict legends or conflict columns", () => {
+        render(
+            <RentalCalendar
+                itemOptions={[{ id: "item-1", label: "INV-1 - Generator" }]}
+                rentals={[
+                    {
+                        id: "r1",
+                        itemId: "item-1",
+                        itemLabel: "INV-1 - Generator",
+                        startDate: "2026-03-10T10:00:00.000Z",
+                        endDate: "2026-03-10T12:00:00.000Z",
+                        quantity: 1,
+                        status: "Planned"
+                    }
+                ]}
+            />
+        );
+
+        expect(screen.queryByText(/Conflict:/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole("columnheader", { name: "Konflikt" })).not.toBeInTheDocument();
+    });
 });

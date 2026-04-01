@@ -3,6 +3,16 @@ import { InventoryItemsService, type CreateInventoryItemRequest } from "@/lib/ap
 import { configureOpenApiClient } from "@/lib/api/openapi-client";
 import { toApiErrorResponse } from "@/app/api/proxy/_shared/proxy-api-error";
 
+export async function GET() {
+    try {
+        configureOpenApiClient();
+        const items = await InventoryItemsService.getApiItems();
+        return NextResponse.json(items, { status: 200 });
+    } catch (error) {
+        return toApiErrorResponse(error, "Inventory item list failed");
+    }
+}
+
 export async function POST(request: Request) {
     try {
         configureOpenApiClient();

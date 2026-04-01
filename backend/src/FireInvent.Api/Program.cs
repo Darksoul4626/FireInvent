@@ -4,6 +4,7 @@ using FireInvent.Api.Application.Services.InventoryItems;
 using FireInvent.Api.Application.Services.Rentals;
 using FireInvent.Api.Domain.Repositories;
 using FireInvent.Api.Domain.Repositories.Rentals;
+using FireInvent.Api.Infrastructure.HostedServices;
 using FireInvent.Api.Infrastructure.Http;
 using FireInvent.Api.Infrastructure.Persistence;
 using FireInvent.Api.Infrastructure.Persistence.Repositories;
@@ -36,6 +37,9 @@ builder.Services.AddControllers()
     });
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IBusinessDayBoundary, EuropeBerlinBusinessDayBoundary>();
 if (useInMemoryProvider)
 {
     builder.Services.AddDbContext<FireInventDbContext>(options =>
@@ -59,6 +63,9 @@ builder.Services.AddScoped<IInventoryCategoryRepository, InventoryCategoryReposi
 builder.Services.AddScoped<IInventoryCategoryService, InventoryCategoryService>();
 builder.Services.AddScoped<IRentalBookingRepository, RentalBookingRepository>();
 builder.Services.AddScoped<IRentalBookingService, RentalBookingService>();
+builder.Services.Configure<RentalLifecycleAutomationOptions>(
+    builder.Configuration.GetSection(RentalLifecycleAutomationOptions.SectionName));
+builder.Services.AddHostedService<RentalLifecycleAutomationHostedService>();
 builder.Services.AddScoped<IItemAvailabilityService, ItemAvailabilityService>();
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();

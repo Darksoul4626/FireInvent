@@ -6,5 +6,6 @@ public interface IItemAvailabilityService
         Guid itemId,
         DateTimeOffset from,
         DateTimeOffset to,
-        CancellationToken cancellationToken);
+    CancellationToken cancellationToken,
+    Guid? excludeBookingId = null);
 }

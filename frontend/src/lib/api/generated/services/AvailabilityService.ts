@@ -15,10 +15,12 @@ export class AvailabilityService {
         itemId,
         from,
         to,
+        excludeBookingId,
     }: {
         itemId: string,
         from?: string,
         to?: string,
+        excludeBookingId?: string,
     }): CancelablePromise<ItemAvailabilityResponse> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -29,6 +31,7 @@ export class AvailabilityService {
             query: {
                 'From': from,
                 'To': to,
+                'ExcludeBookingId': excludeBookingId,
             },
         });
     }

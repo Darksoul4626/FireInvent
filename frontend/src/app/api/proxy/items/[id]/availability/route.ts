@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { AvailabilityService } from "@/lib/api/generated";
-import { configureOpenApiClient } from "@/lib/api/openapi-client";
+import { getApiBaseUrl } from "@/lib/api/openapi-client";
 import { toApiErrorResponse } from "@/app/api/proxy/_shared/proxy-api-error";
 
 type RouteContext = {
@@ -11,19 +10,36 @@ export async function GET(request: Request, { params }: RouteContext) {
     const { id } = await params;
 
     try {
-        configureOpenApiClient();
-
         const { searchParams } = new URL(request.url);
-        const from = searchParams.get("from") ?? undefined;
-        const to = searchParams.get("to") ?? undefined;
+        const upstreamUrl = new URL(`/api/items/${id}/availability`, getApiBaseUrl());
 
-        const availability = await AvailabilityService.getApiItemsAvailability({
-            itemId: id,
-            from,
-            to
+        const from = searchParams.get("from");
+        const to = searchParams.get("to");
+        const excludeBookingId = searchParams.get("excludeBookingId");
+
+        if (from) {
+            upstreamUrl.searchParams.set("from", from);
+        }
+
+        if (to) {
+            upstreamUrl.searchParams.set("to", to);
+        }
+
+        if (excludeBookingId) {
+            upstreamUrl.searchParams.set("excludeBookingId", excludeBookingId);
+        }
+
+        const response = await fetch(upstreamUrl, {
+            method: "GET",
+            headers: {
+                Accept: "application/json"
+            },
+            cache: "no-store"
         });
 
-        return NextResponse.json(availability, { status: 200 });
+        const payload = await response.json();
+
+        return NextResponse.json(payload, { status: response.status });
     } catch (error) {
         return toApiErrorResponse(error, "Availability request failed");
     }

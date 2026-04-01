@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define how stock availability is computed, validated, and presented for rental operations.
+
+## Requirements
 
 ### Requirement: Availability shall be derived from stock and overlapping rentals
 The system SHALL calculate per-item availability as total quantity minus quantities reserved or rented in overlapping periods, including all rental lines of a rental.

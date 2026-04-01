@@ -16,6 +16,15 @@ public sealed class RentalBookingsController(IRentalBookingService service) : Co
         return Ok(rentals);
     }
 
+    [HttpGet("overview")]
+    public async Task<ActionResult<PagedRentalOverviewResponse>> GetOverview(
+        [FromQuery] GetRentalOverviewQuery query,
+        CancellationToken cancellationToken)
+    {
+        var overview = await service.GetOverviewAsync(query, cancellationToken);
+        return Ok(overview);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<RentalBookingResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {

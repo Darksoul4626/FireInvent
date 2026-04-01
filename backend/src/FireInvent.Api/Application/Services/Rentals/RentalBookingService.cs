@@ -8,12 +8,32 @@ namespace FireInvent.Api.Application.Services.Rentals;
 
 public sealed class RentalBookingService(
     IRentalBookingRepository repository,
-    IInventoryItemRepository inventoryRepository) : IRentalBookingService
+    IInventoryItemRepository inventoryRepository,
+    IBusinessDayBoundary businessDayBoundary) : IRentalBookingService
 {
+    private const string InvalidRentalStateCode = "invalid_rental_state";
+
     public async Task<IReadOnlyList<RentalBookingResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var bookings = await repository.GetAllAsync(cancellationToken);
         return bookings.Select(ToResponse).ToList();
+    }
+
+    public async Task<PagedRentalOverviewResponse> GetOverviewAsync(
+        GetRentalOverviewQuery query,
+        CancellationToken cancellationToken)
+    {
+        var normalized = NormalizeOverviewQuery(query);
+        var page = await repository.GetOverviewAsync(normalized, cancellationToken);
+
+        return new PagedRentalOverviewResponse(
+            page.Items.Select(ToOverviewResponse).ToList(),
+            page.Page,
+            page.PageSize,
+            page.TotalCount,
+            page.TotalPages,
+            page.HasPrevious,
+            page.HasNext);
     }
 
     public async Task<RentalBookingResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -26,6 +46,13 @@ public sealed class RentalBookingService(
         CreateRentalBookingRequest request,
         CancellationToken cancellationToken)
     {
+        if (!IsStartDateValid(request.StartDate))
+        {
+            return RentalBookingServiceResult.Conflict(
+                "rental_start_in_past",
+                "Start date must be today or later in Europe/Berlin.");
+        }
+
         var normalizedLines = NormalizeLines(request.Lines);
         if (normalizedLines.Count == 0)
         {
@@ -88,8 +115,15 @@ public sealed class RentalBookingService(
         if (booking.Status is RentalStatus.Canceled or RentalStatus.Completed)
         {
             return RentalBookingServiceResult.Conflict(
-                "invalid_rental_state",
+                InvalidRentalStateCode,
                 "Canceled or completed rentals cannot be updated.");
+        }
+
+        if (!IsStartDateValid(request.StartDate))
+        {
+            return RentalBookingServiceResult.Conflict(
+                "rental_start_in_past",
+                "Start date must be today or later in Europe/Berlin.");
         }
 
         var normalizedLines = NormalizeLines(request.Lines);
@@ -123,7 +157,7 @@ public sealed class RentalBookingService(
         if (!CanTransition(booking.Status, request.Status))
         {
             return RentalBookingServiceResult.Conflict(
-                "invalid_rental_state",
+                InvalidRentalStateCode,
                 $"Rental cannot transition from '{booking.Status}' to '{request.Status}'.");
         }
 
@@ -176,7 +210,7 @@ public sealed class RentalBookingService(
         if (!CanTransition(booking.Status, RentalStatus.Canceled))
         {
             return RentalBookingServiceResult.Conflict(
-                "invalid_rental_state",
+                InvalidRentalStateCode,
                 "Rental cannot be canceled from current status.");
         }
 
@@ -198,7 +232,7 @@ public sealed class RentalBookingService(
         if (!CanTransition(booking.Status, RentalStatus.Returned))
         {
             return RentalBookingServiceResult.Conflict(
-                "invalid_rental_state",
+                InvalidRentalStateCode,
                 "Rental cannot be marked as returned from current status.");
         }
 
@@ -220,7 +254,7 @@ public sealed class RentalBookingService(
         if (!CanTransition(booking.Status, RentalStatus.Completed))
         {
             return RentalBookingServiceResult.Conflict(
-                "invalid_rental_state",
+                InvalidRentalStateCode,
                 "Rental cannot be completed from current status.");
         }
 
@@ -322,5 +356,63 @@ public sealed class RentalBookingService(
             RentalStatus.Completed => false,
             _ => false
         };
+    }
+
+    private static RentalOverviewItemResponse ToOverviewResponse(RentalOverviewRow row)
+    {
+        return new RentalOverviewItemResponse(
+            row.Id,
+            row.StartDate,
+            row.EndDate,
+            row.BorrowerName,
+            row.Status,
+            row.TotalQuantity,
+            row.ItemSummary,
+            row.CreatedAt,
+            row.UpdatedAt);
+    }
+
+    private static RentalOverviewQuery NormalizeOverviewQuery(GetRentalOverviewQuery query)
+    {
+        var page = query.Page <= 0 ? 1 : query.Page;
+        var pageSize = query.PageSize switch
+        {
+            <= 0 => 20,
+            > 200 => 200,
+            _ => query.PageSize
+        };
+
+        RentalStatus? status = null;
+        if (!string.IsNullOrWhiteSpace(query.Status)
+            && Enum.TryParse<RentalStatus>(query.Status, true, out var parsedStatus))
+        {
+            status = parsedStatus;
+        }
+
+        return new RentalOverviewQuery(
+            page,
+            pageSize,
+            NormalizeOptional(query.Search),
+            status,
+            query.ItemId,
+            query.From,
+                query.To);
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim();
+    }
+
+    private bool IsStartDateValid(DateTimeOffset startDate)
+    {
+        var startDay = businessDayBoundary.ToBusinessDate(startDate);
+        var today = businessDayBoundary.GetCurrentBusinessDate();
+        return startDay >= today;
     }
 }

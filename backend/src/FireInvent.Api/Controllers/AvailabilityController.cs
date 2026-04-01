@@ -15,7 +15,13 @@ public sealed class AvailabilityController(IItemAvailabilityService service) : C
         [FromQuery] GetItemAvailabilityQuery query,
         CancellationToken cancellationToken)
     {
-        var result = await service.GetAsync(itemId, query.From, query.To, cancellationToken);
+        var result = await service.GetAsync(
+            itemId,
+            query.From,
+            query.To,
+            cancellationToken,
+            query.ExcludeBookingId);
+
         if (result.NotFound)
         {
             return NotFound(ApiProblemDetails.NotFound(

@@ -22,8 +22,7 @@ type CalendarRental = {
     startDate: string;
     endDate: string;
     quantity: number;
-    status: "Planned" | "Active" | "Returned" | "Completed";
-    isConflict?: boolean;
+    status: "Planned" | "Active";
 };
 
 type ItemOption = {
@@ -39,12 +38,8 @@ type Props = {
 
 const statusColor: Record<CalendarRental["status"], string> = {
     Planned: "#2563eb",
-    Active: "#059669",
-    Returned: "#d97706",
-    Completed: "#334155"
+    Active: "#059669"
 };
-
-const conflictColor = "#dc2626";
 
 export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonly<Props>) {
     const router = useRouter();
@@ -91,12 +86,11 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonl
         title: `${rental.itemLabel} (x${rental.quantity})`,
         start: rental.startDate,
         end: rental.endDate,
-        backgroundColor: rental.isConflict ? conflictColor : statusColor[rental.status],
-        borderColor: rental.isConflict ? conflictColor : statusColor[rental.status],
+        backgroundColor: statusColor[rental.status],
+        borderColor: statusColor[rental.status],
         extendedProps: {
             status: rental.status,
-            quantity: rental.quantity,
-            isConflict: Boolean(rental.isConflict)
+            quantity: rental.quantity
         }
     }));
 
@@ -173,9 +167,6 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonl
             <div className="flex flex-wrap gap-2 text-xs">
                 <Badge variant="secondary" className="fi-status-planned">Planned: geplant</Badge>
                 <Badge variant="secondary" className="fi-status-active">Active: aktiv ausgeliehen</Badge>
-                <Badge variant="secondary" className="fi-status-returned">Returned: zurueckgegeben</Badge>
-                <Badge variant="secondary" className="fi-status-completed">Completed: abgeschlossen</Badge>
-                <Badge variant="secondary" className="fi-status-conflict">Conflict: ueberbucht</Badge>
             </div>
 
             {resolvedView === "calendar" ? (
@@ -208,13 +199,12 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonl
                                     <span>Menge: {rental.quantity}</span>
                                     <span>{rental.status}</span>
                                 </div>
-                                <p className="text-xs font-medium">Konflikt: {rental.isConflict ? "Ja" : "Nein"}</p>
                             </article>
                         ))}
                     </div>
 
                     <div className="hidden sm:block">
-                        <Table data-testid="calendar-table" className="min-w-[48rem] lg:min-w-[54rem]">
+                        <Table data-testid="calendar-table" className="min-w-3xl lg:min-w-216">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Gegenstand</TableHead>
@@ -222,22 +212,16 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonl
                                     <TableHead>Ende</TableHead>
                                     <TableHead>Menge</TableHead>
                                     <TableHead>Status</TableHead>
-                                    <TableHead>Konflikt</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {tableRows.map((rental) => (
-                                    <TableRow
-                                        key={rental.id}
-                                        data-testid={`calendar-table-row-${rental.id}`}
-                                        className={rental.isConflict ? "bg-red-50 dark:bg-red-950/40" : undefined}
-                                    >
+                                    <TableRow key={rental.id} data-testid={`calendar-table-row-${rental.id}`}>
                                         <TableCell>{rental.itemLabel}</TableCell>
                                         <TableCell>{formatDateTime(rental.startDate)}</TableCell>
                                         <TableCell>{formatDateTime(rental.endDate)}</TableCell>
                                         <TableCell>{rental.quantity}</TableCell>
                                         <TableCell>{rental.status}</TableCell>
-                                        <TableCell>{rental.isConflict ? "Ja" : "Nein"}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -250,10 +234,6 @@ export function RentalCalendar({ rentals, itemOptions, selectedItemId }: Readonl
                 {selectedItemId
                     ? `Zeige ${visibleEvents.length} Termin(e) fuer den ausgewaehlten Gegenstand.`
                     : `Zeige ${visibleEvents.length} Termin(e) fuer alle Gegenstaende.`}
-            </p>
-
-            <p className="m-0 text-xs text-red-700 dark:text-red-400">
-                Rot markierte Eintraege befinden sich in ueberbuchten Zeitraeumen.
             </p>
         </section>
     );

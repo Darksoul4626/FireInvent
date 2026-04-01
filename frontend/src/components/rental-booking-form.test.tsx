@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RentalBookingForm } from "@/components/rental-booking-form";
 
@@ -29,13 +29,29 @@ describe("RentalBookingForm", () => {
 
     it("shows validation error when end date is before start date", async () => {
         const user = userEvent.setup();
-        const fetchMock = vi.fn();
+        const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+            const url = String(input);
+            if (url.includes("/api/proxy/items/") && url.includes("/availability")) {
+                return {
+                    ok: true,
+                    json: async () => ({
+                        availableQuantity: 10,
+                        totalQuantity: 10
+                    })
+                } as Response;
+            }
+
+            return {
+                ok: true,
+                json: async () => ({})
+            } as Response;
+        });
         vi.stubGlobal("fetch", fetchMock);
 
         render(<RentalBookingForm mode="create" itemOptions={itemOptions} />);
 
-        await user.type(screen.getByTestId("rental-start-input"), "2026-03-10");
-        await user.type(screen.getByTestId("rental-end-input"), "2026-03-09");
+        await user.type(screen.getByTestId("rental-start-input"), "2099-03-10");
+        await user.type(screen.getByTestId("rental-end-input"), "2099-03-09");
 
         const quantityInput = screen.getByTestId("rental-quantity-input") as HTMLInputElement;
         await user.clear(quantityInput);
@@ -52,13 +68,29 @@ describe("RentalBookingForm", () => {
 
     it("submits create rental payload", async () => {
         const user = userEvent.setup();
-        const fetchMock = vi.fn(async () => ({ ok: true }));
+        const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+            const url = String(input);
+            if (url.includes("/api/proxy/items/") && url.includes("/availability")) {
+                return {
+                    ok: true,
+                    json: async () => ({
+                        availableQuantity: 10,
+                        totalQuantity: 10
+                    })
+                } as Response;
+            }
+
+            return {
+                ok: true,
+                json: async () => ({})
+            } as Response;
+        });
         vi.stubGlobal("fetch", fetchMock);
 
         render(<RentalBookingForm mode="create" itemOptions={itemOptions} />);
 
-        await user.type(screen.getByTestId("rental-start-input"), "2026-03-10");
-        await user.type(screen.getByTestId("rental-end-input"), "2026-03-10");
+        await user.type(screen.getByTestId("rental-start-input"), "2099-03-10");
+        await user.type(screen.getByTestId("rental-end-input"), "2099-03-10");
         const quantityInput = screen.getByTestId("rental-quantity-input") as HTMLInputElement;
         await user.clear(quantityInput);
         await user.type(quantityInput, "2");
@@ -83,7 +115,23 @@ describe("RentalBookingForm", () => {
 
     it("adds a second line and submits normalized lines", async () => {
         const user = userEvent.setup();
-        const fetchMock = vi.fn(async () => ({ ok: true }));
+        const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+            const url = String(input);
+            if (url.includes("/api/proxy/items/") && url.includes("/availability")) {
+                return {
+                    ok: true,
+                    json: async () => ({
+                        availableQuantity: 10,
+                        totalQuantity: 10
+                    })
+                } as Response;
+            }
+
+            return {
+                ok: true,
+                json: async () => ({})
+            } as Response;
+        });
         vi.stubGlobal("fetch", fetchMock);
 
         render(<RentalBookingForm mode="create" itemOptions={itemOptions} />);
@@ -94,8 +142,8 @@ describe("RentalBookingForm", () => {
         await user.clear(secondQuantityInput);
         await user.type(secondQuantityInput, "3");
 
-        await user.type(screen.getByTestId("rental-start-input"), "2026-03-10");
-        await user.type(screen.getByTestId("rental-end-input"), "2026-03-11");
+        await user.type(screen.getByTestId("rental-start-input"), "2099-03-10");
+        await user.type(screen.getByTestId("rental-end-input"), "2099-03-11");
         await user.click(screen.getByTestId("rental-submit-button"));
 
         const submitCall = fetchMock.mock.calls.find(([url]) => String(url) === "/api/proxy/rentals");
@@ -104,5 +152,97 @@ describe("RentalBookingForm", () => {
         const [, options] = submitCall as [string, RequestInit];
         const body = JSON.parse(String(options.body));
         expect(body.lines).toEqual([{ itemId: itemOptions[0].id, quantity: 4 }]);
+    });
+
+    it("blocks save when requested quantity exceeds availability", async () => {
+        const user = userEvent.setup();
+        const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+            const url = String(input);
+            if (url.includes("/api/proxy/items/") && url.includes("/availability")) {
+                return {
+                    ok: true,
+                    json: async () => ({
+                        availableQuantity: 0,
+                        totalQuantity: 8
+                    })
+                } as Response;
+            }
+
+            return {
+                ok: true,
+                json: async () => ({})
+            } as Response;
+        });
+        vi.stubGlobal("fetch", fetchMock);
+
+        render(<RentalBookingForm mode="create" itemOptions={itemOptions} />);
+
+        await user.type(screen.getByTestId("rental-start-input"), "2099-05-10");
+        await user.type(screen.getByTestId("rental-end-input"), "2099-05-10");
+
+        const quantityInput = screen.getByTestId("rental-quantity-input") as HTMLInputElement;
+        await user.clear(quantityInput);
+        await user.type(quantityInput, "2");
+
+        await waitFor(() => {
+            expect(screen.getByTestId("rental-submit-button")).toBeDisabled();
+        });
+    });
+
+    it("shows Berlin day-boundary validation for past start date", async () => {
+        const user = userEvent.setup();
+        const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+            const url = String(input);
+            if (url.includes("/api/proxy/items/") && url.includes("/availability")) {
+                return {
+                    ok: true,
+                    json: async () => ({
+                        availableQuantity: 10,
+                        totalQuantity: 10
+                    })
+                } as Response;
+            }
+
+            return {
+                ok: true,
+                json: async () => ({})
+            } as Response;
+        });
+        vi.stubGlobal("fetch", fetchMock);
+
+        render(<RentalBookingForm mode="create" itemOptions={itemOptions} />);
+
+        await user.type(screen.getByTestId("rental-start-input"), "2000-01-01");
+        await user.type(screen.getByTestId("rental-end-input"), "2000-01-02");
+
+        expect(await screen.findByTestId("rental-start-berlin-error")).toBeInTheDocument();
+        expect(screen.getByTestId("rental-submit-button")).toBeDisabled();
+    });
+
+    it("blocks save when availability prevalidation fails", async () => {
+        const user = userEvent.setup();
+        const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+            const url = String(input);
+            if (url.includes("/api/proxy/items/") && url.includes("/availability")) {
+                return {
+                    ok: false,
+                    json: async () => ({})
+                } as Response;
+            }
+
+            return {
+                ok: true,
+                json: async () => ({})
+            } as Response;
+        });
+        vi.stubGlobal("fetch", fetchMock);
+
+        render(<RentalBookingForm mode="create" itemOptions={itemOptions} />);
+
+        await user.type(screen.getByTestId("rental-start-input"), "2099-06-01");
+        await user.type(screen.getByTestId("rental-end-input"), "2099-06-02");
+
+        expect(await screen.findByTestId("rental-availability-error")).toBeInTheDocument();
+        expect(screen.getByTestId("rental-submit-button")).toBeDisabled();
     });
 });

@@ -12,7 +12,8 @@ public sealed class ItemAvailabilityService(
         Guid itemId,
         DateTimeOffset from,
         DateTimeOffset to,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? excludeBookingId = null)
     {
         var item = await inventoryRepository.GetByIdAsync(itemId, cancellationToken);
         if (item is null)
@@ -24,7 +25,7 @@ public sealed class ItemAvailabilityService(
             itemId,
             from,
             to,
-            excludeBookingId: null,
+            excludeBookingId,
             cancellationToken);
 
         var available = Math.Max(item.TotalQuantity - reservedOrRented, 0);

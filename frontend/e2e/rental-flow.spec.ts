@@ -20,7 +20,7 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
 
     await page.getByTestId("inventory-code-input").fill(itemCode);
     await page.getByTestId("inventory-name-input").fill(itemName);
-    await page.getByTestId("inventory-category-select").selectOption(categoryName);
+    await page.getByTestId("inventory-category-select").fill(categoryName);
     await page.getByTestId("inventory-condition-select").selectOption("Good");
     await page.getByTestId("inventory-location-input").fill("Station A");
     await page.getByTestId("inventory-total-quantity-input").fill("3");
@@ -39,7 +39,10 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
     await page.goto("/rentals/new");
 
     const createdItemLabel = `${itemCode} - ${itemName}`;
-    await page.getByTestId("rental-item-select").selectOption(itemId);
+    const rentalItemSelect = page.getByTestId("rental-item-select");
+    await expect(page.locator(`[data-testid="rental-item-select"] option[value="${itemId}"]`)).toHaveCount(1);
+    await rentalItemSelect.selectOption(itemId);
+    await expect(rentalItemSelect).toHaveValue(itemId);
 
     const day = (Number(suffix.slice(-2)) % 20) + 1;
     const dayPadded = String(day).padStart(2, "0");
@@ -64,6 +67,8 @@ test("item create -> rent -> complete -> availability update", async ({ page }) 
     };
 
     await expect(page).toHaveURL(/\/rentals$/);
+    await page.getByTestId("rentals-overview-item").selectOption(itemId);
+    await expect(page).toHaveURL(new RegExp(`itemId=${itemId}`));
 
     const rentalRow = rowById(page, "rental-row", createdRental.id);
     await expect(rentalRow).toBeVisible();

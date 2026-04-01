@@ -1,20 +1,12 @@
 import Link from "next/link";
-import { ExternalLink, Pencil, Plus } from "lucide-react";
-import { buildInventoryRows } from "@/app/inventory/build-rows";
-import { InventoryItemDeleteAction } from "@/components/inventory-item-delete-action";
-import { ActionButtonGroup } from "@/components/ui/action-button-group";
+import { Plus } from "lucide-react";
+import { InventoryOverviewTable } from "@/components/inventory-overview-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getInventoryItems, getRentalBookings } from "@/lib/api/fireinvent-api";
 
 export const dynamic = "force-dynamic";
 
-export default async function InventoryPage() {
-    const now = new Date();
-    const [items, rentals] = await Promise.all([getInventoryItems(), getRentalBookings()]);
-    const rows = buildInventoryRows(now, items, rentals);
-
+export default function InventoryPage() {
     return (
         <section className="grid gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -40,104 +32,10 @@ export default async function InventoryPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Inventaruebersicht</CardTitle>
-                    <CardDescription>Responsiv mit horizontalem Overflow fuer schmale Viewports.</CardDescription>
+                    <CardDescription>Serverseitige Filter und Paging mit URL-Status, Sortierung pro Tabelle lokal.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-3 xl:hidden">
-                        {rows.map((row) => (
-                            <article key={row.id} className="fi-mobile-list-card grid gap-2" data-testid={`inventory-mobile-card-${row.id}`}>
-                                <div className="flex items-start justify-between gap-2">
-                                    <div>
-                                        <p className="text-xs text-slate-600 dark:text-slate-300">{row.code}</p>
-                                        <h3 className="text-base font-semibold">{row.name}</h3>
-                                    </div>
-                                    <span className="rounded-full bg-slate-200 px-2 py-1 text-xs dark:bg-slate-700">{row.category}</span>
-                                </div>
-                                <p className="text-sm text-slate-600 dark:text-slate-300">{row.condition} · {row.location}</p>
-                                <div className="grid grid-cols-3 gap-2 text-xs">
-                                    <div>
-                                        <p className="text-slate-500">Gesamt</p>
-                                        <p data-testid={`inventory-row-total-${row.id}`} className="font-semibold">{row.total}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-slate-500">Vermietet</p>
-                                        <p data-testid={`inventory-row-rented-${row.id}`} className="font-semibold">{row.rented}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-slate-500">Verfuegbar</p>
-                                        <p data-testid={`inventory-row-available-${row.id}`} className="font-semibold">{row.available}</p>
-                                    </div>
-                                </div>
-                                <div className="grid gap-1">
-                                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Aktionen</p>
-                                    <ActionButtonGroup data-testid={`inventory-row-actions-${row.id}`}>
-                                        <Button asChild variant="outline" size="sm">
-                                            <Link href={`/inventory/${row.id}`}>
-                                                <ExternalLink className="h-4 w-4" />
-                                                oeffnen
-                                            </Link>
-                                        </Button>
-                                        <Button asChild variant="outline" size="sm">
-                                            <Link href={`/inventory/${row.id}/edit`}>
-                                                <Pencil className="h-4 w-4" />
-                                                bearbeiten
-                                            </Link>
-                                        </Button>
-                                        <InventoryItemDeleteAction itemId={row.id} itemName={row.name} buttonVariant="destructive" />
-                                    </ActionButtonGroup>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
-
-                    <div className="hidden xl:block">
-                        <Table data-testid="inventory-table" className="min-w-176 lg:min-w-208">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Code</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Kategorie</TableHead>
-                                    <TableHead>Zustand</TableHead>
-                                    <TableHead>Ort</TableHead>
-                                    <TableHead>Gesamt</TableHead>
-                                    <TableHead>Vermietet</TableHead>
-                                    <TableHead>Verfuegbar</TableHead>
-                                    <TableHead>Aktionen</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {rows.map((row) => (
-                                    <TableRow key={row.id} data-testid={`inventory-row-${row.id}`}>
-                                        <TableCell>{row.code}</TableCell>
-                                        <TableCell>{row.name}</TableCell>
-                                        <TableCell>{row.category}</TableCell>
-                                        <TableCell>{row.condition}</TableCell>
-                                        <TableCell>{row.location}</TableCell>
-                                        <TableCell data-testid={`inventory-row-total-${row.id}`}>{row.total}</TableCell>
-                                        <TableCell data-testid={`inventory-row-rented-${row.id}`}>{row.rented}</TableCell>
-                                        <TableCell data-testid={`inventory-row-available-${row.id}`}>{row.available}</TableCell>
-                                        <TableCell>
-                                            <ActionButtonGroup data-testid={`inventory-row-actions-${row.id}`}>
-                                                <Button asChild variant="outline" size="sm">
-                                                    <Link href={`/inventory/${row.id}`}>
-                                                        <ExternalLink className="h-4 w-4" />
-                                                        oeffnen
-                                                    </Link>
-                                                </Button>
-                                                <Button asChild variant="outline" size="sm">
-                                                    <Link href={`/inventory/${row.id}/edit`}>
-                                                        <Pencil className="h-4 w-4" />
-                                                        bearbeiten
-                                                    </Link>
-                                                </Button>
-                                                <InventoryItemDeleteAction itemId={row.id} itemName={row.name} buttonVariant="destructive" />
-                                            </ActionButtonGroup>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
+                    <InventoryOverviewTable />
                 </CardContent>
             </Card>
         </section>

@@ -16,6 +16,15 @@ public sealed class InventoryItemsController(IInventoryItemService service) : Co
         return Ok(items);
     }
 
+    [HttpGet("overview")]
+    public async Task<ActionResult<PagedInventoryOverviewResponse>> GetOverview(
+        [FromQuery] GetInventoryOverviewQuery query,
+        CancellationToken cancellationToken)
+    {
+        var overview = await service.GetOverviewAsync(query, cancellationToken);
+        return Ok(overview);
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<InventoryItemResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {

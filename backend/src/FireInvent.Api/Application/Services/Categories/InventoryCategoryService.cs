@@ -1,6 +1,7 @@
 using FireInvent.Api.Contracts.Categories;
 using FireInvent.Api.Domain.Entities;
 using FireInvent.Api.Domain.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace FireInvent.Api.Application.Services.Categories;
 
@@ -40,8 +41,17 @@ public sealed class InventoryCategoryService(IInventoryCategoryRepository reposi
             UpdatedAt = now
         };
 
-        await repository.AddAsync(category, cancellationToken);
-        await repository.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await repository.AddAsync(category, cancellationToken);
+            await repository.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return InventoryCategoryServiceResult.Conflict(
+                "category_name_conflict",
+                $"A category with name '{name}' already exists.");
+        }
 
         return InventoryCategoryServiceResult.Success(ToResponse(category));
     }
@@ -69,7 +79,17 @@ public sealed class InventoryCategoryService(IInventoryCategoryRepository reposi
         category.Name = name;
         category.UpdatedAt = DateTimeOffset.UtcNow;
 
-        await repository.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await repository.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return InventoryCategoryServiceResult.Conflict(
+                "category_name_conflict",
+                $"A category with name '{name}' already exists.");
+        }
+
         return InventoryCategoryServiceResult.Success(ToResponse(category));
     }
 

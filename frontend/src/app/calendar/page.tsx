@@ -4,15 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getInventoryItems, getRentalBookings } from "@/lib/api/fireinvent-api";
 import type { RentalStatus } from "@/lib/api/fireinvent-api";
 
-type VisibleCalendarStatus = Exclude<RentalStatus, "Canceled">;
+type VisibleCalendarStatus = Extract<RentalStatus, "Planned" | "Active">;
 
 export const dynamic = "force-dynamic";
 
 function isVisibleCalendarStatus(status: RentalStatus): status is VisibleCalendarStatus {
-    return status !== "Canceled";
-}
-
-function isStockRelevantStatus(status: RentalStatus): status is "Planned" | "Active" {
     return status === "Planned" || status === "Active";
 }
 
@@ -31,82 +27,15 @@ type CalendarRental = {
     status: VisibleCalendarStatus;
 };
 
-type TimePoint = {
-    at: number;
-    type: "start" | "end";
-    rentalId: string;
-    quantity: number;
-};
-
-function detectConflictRentalIds(rentals: CalendarRental[], itemTotalQuantity: number): Set<string> {
-    const points: TimePoint[] = [];
-    for (const rental of rentals) {
-        points.push({
-            at: new Date(rental.startDate).getTime(),
-            type: "start",
-            rentalId: rental.id,
-            quantity: rental.quantity
-        });
-        points.push({
-            at: new Date(rental.endDate).getTime(),
-            type: "end",
-            rentalId: rental.id,
-            quantity: rental.quantity
-        });
-    }
-
-    points.sort((a, b) => {
-        if (a.at !== b.at) {
-            return a.at - b.at;
-        }
-
-        if (a.type === b.type) {
-            return 0;
-        }
-
-        // End first to treat equal timestamps as non-overlapping handover.
-        return a.type === "end" ? -1 : 1;
-    });
-
-    const activeRentalIds = new Set<string>();
-    const quantityByRentalId = new Map<string, number>();
-    const conflictRentalIds = new Set<string>();
-    let activeTotal = 0;
-
-    for (const point of points) {
-        if (point.type === "end") {
-            if (activeRentalIds.has(point.rentalId)) {
-                activeRentalIds.delete(point.rentalId);
-                activeTotal -= quantityByRentalId.get(point.rentalId) ?? point.quantity;
-                quantityByRentalId.delete(point.rentalId);
-            }
-            continue;
-        }
-
-        activeRentalIds.add(point.rentalId);
-        quantityByRentalId.set(point.rentalId, point.quantity);
-        activeTotal += point.quantity;
-
-        if (activeTotal > itemTotalQuantity) {
-            for (const rentalId of activeRentalIds) {
-                conflictRentalIds.add(rentalId);
-            }
-        }
-    }
-
-    return conflictRentalIds;
-}
-
-export default async function RentalCalendarPage({ searchParams }: Props) {
+export default async function RentalCalendarPage({ searchParams }: Readonly<Props>) {
     const resolvedSearchParams = await searchParams;
     const requestedItemId = resolvedSearchParams?.itemId;
 
     const [items, rentals] = await Promise.all([getInventoryItems(), getRentalBookings()]);
     const itemMap = new Map(items.map((item) => [item.id, `${item.inventoryCode} - ${item.name}`]));
-    const itemTotalQuantityMap = new Map(items.map((item) => [item.id, item.totalQuantity]));
     const selectedItemId = items.some((item) => item.id === requestedItemId) ? requestedItemId : undefined;
 
-    const baseCalendarRentals: CalendarRental[] = rentals
+    const calendarRentals: CalendarRental[] = rentals
         .filter((rental) => isVisibleCalendarStatus(rental.status))
         .flatMap((rental, rentalIndex) => {
             const status = rental.status as VisibleCalendarStatus;
@@ -121,36 +50,6 @@ export default async function RentalCalendarPage({ searchParams }: Props) {
                 status
             }));
         });
-
-    const conflictIds = new Set<string>();
-    const rentalsByItem = new Map<string, CalendarRental[]>();
-
-    for (const rental of baseCalendarRentals) {
-        if (!isStockRelevantStatus(rental.status)) {
-            continue;
-        }
-
-        const list = rentalsByItem.get(rental.itemId) ?? [];
-        list.push(rental);
-        rentalsByItem.set(rental.itemId, list);
-    }
-
-    for (const [itemId, groupedRentals] of rentalsByItem) {
-        const totalQuantity = itemTotalQuantityMap.get(itemId);
-        if (typeof totalQuantity !== "number" || totalQuantity <= 0) {
-            continue;
-        }
-
-        const detected = detectConflictRentalIds(groupedRentals, totalQuantity);
-        for (const id of detected) {
-            conflictIds.add(id);
-        }
-    }
-
-    const calendarRentals = baseCalendarRentals.map((rental) => ({
-        ...rental,
-        isConflict: conflictIds.has(rental.id)
-    }));
 
     const itemOptions = items.map((item) => ({
         id: item.id,
@@ -169,7 +68,7 @@ export default async function RentalCalendarPage({ searchParams }: Props) {
                 <CardHeader>
                     <CardTitle>Vermietungskalender</CardTitle>
                     <CardDescription>
-                        Zeigt relevante Vermietungen inkl. Rueckgabe- und Abschlussstatus fuer ausgewaehlte Zeitraeume.
+                        Zeigt relevante Vermietungen in den Status Planned und Active fuer ausgewaehlte Zeitraeume.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

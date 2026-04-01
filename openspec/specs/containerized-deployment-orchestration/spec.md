@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define how frontend, backend, and database are packaged and orchestrated as containers.
+
+## Requirements
 
 ### Requirement: Application components shall run in separate containers
 The system SHALL provide dedicated container images and runtime configuration for frontend, backend, and database as separate deployable services.

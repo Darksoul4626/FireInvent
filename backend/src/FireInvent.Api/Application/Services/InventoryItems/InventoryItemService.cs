@@ -1,5 +1,6 @@
 using FireInvent.Api.Contracts.InventoryItems;
 using FireInvent.Api.Domain.Entities;
+using FireInvent.Api.Domain.Enums;
 using FireInvent.Api.Domain.Repositories;
 
 namespace FireInvent.Api.Application.Services.InventoryItems;
@@ -10,6 +11,23 @@ public sealed class InventoryItemService(IInventoryItemRepository repository) : 
     {
         var items = await repository.GetAllAsync(cancellationToken);
         return items.Select(ToResponse).ToList();
+    }
+
+    public async Task<PagedInventoryOverviewResponse> GetOverviewAsync(
+        GetInventoryOverviewQuery query,
+        CancellationToken cancellationToken)
+    {
+        var normalized = NormalizeOverviewQuery(query);
+
+        var page = await repository.GetOverviewAsync(normalized, cancellationToken);
+        return new PagedInventoryOverviewResponse(
+            page.Items.Select(ToOverviewResponse).ToList(),
+            page.Page,
+            page.PageSize,
+            page.TotalCount,
+            page.TotalPages,
+            page.HasPrevious,
+            page.HasNext);
     }
 
     public async Task<InventoryItemResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -135,5 +153,63 @@ public sealed class InventoryItemService(IInventoryItemRepository repository) : 
             item.TotalQuantity,
             item.CreatedAt,
             item.UpdatedAt);
+    }
+
+    private static InventoryOverviewQuery NormalizeOverviewQuery(GetInventoryOverviewQuery query)
+    {
+        var page = query.Page <= 0 ? 1 : query.Page;
+        var pageSize = query.PageSize switch
+        {
+            <= 0 => 20,
+            > 200 => 200,
+            _ => query.PageSize
+        };
+        var at = query.At ?? DateTimeOffset.UtcNow;
+
+        return new InventoryOverviewQuery(
+            page,
+            pageSize,
+            NormalizeOptional(query.Search),
+            NormalizeOptional(query.Category),
+            ParseCondition(query.Condition),
+            at);
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim();
+    }
+
+    private static ItemCondition? ParseCondition(string? condition)
+    {
+        if (string.IsNullOrWhiteSpace(condition))
+        {
+            return null;
+        }
+
+        return Enum.TryParse<ItemCondition>(condition, true, out var parsed)
+            ? parsed
+            : null;
+    }
+
+    private static InventoryOverviewItemResponse ToOverviewResponse(InventoryOverviewRow row)
+    {
+        return new InventoryOverviewItemResponse(
+            row.Id,
+            row.InventoryCode,
+            row.Name,
+            row.Category,
+            row.Condition,
+            row.Location,
+            row.TotalQuantity,
+            row.Rented,
+            row.Available,
+            row.CreatedAt,
+            row.UpdatedAt);
     }
 }

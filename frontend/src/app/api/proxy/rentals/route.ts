@@ -3,6 +3,16 @@ import { RentalBookingsService, type CreateRentalBookingRequest } from "@/lib/ap
 import { configureOpenApiClient } from "@/lib/api/openapi-client";
 import { toApiErrorResponse } from "@/app/api/proxy/_shared/proxy-api-error";
 
+export async function GET() {
+    try {
+        configureOpenApiClient();
+        const rentals = await RentalBookingsService.getApiRentals();
+        return NextResponse.json(rentals, { status: 200 });
+    } catch (error) {
+        return toApiErrorResponse(error, "Rental list failed");
+    }
+}
+
 export async function POST(request: Request) {
     try {
         configureOpenApiClient();

@@ -5,6 +5,7 @@ namespace FireInvent.Api.Application.Services.InventoryItems;
 public interface IInventoryItemService
 {
     Task<IReadOnlyList<InventoryItemResponse>> GetAllAsync(CancellationToken cancellationToken);
+    Task<PagedInventoryOverviewResponse> GetOverviewAsync(GetInventoryOverviewQuery query, CancellationToken cancellationToken);
     Task<InventoryItemResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<InventoryItemServiceResult> CreateAsync(CreateInventoryItemRequest request, CancellationToken cancellationToken);
     Task<InventoryItemServiceResult> UpdateAsync(Guid id, UpdateInventoryItemRequest request, CancellationToken cancellationToken);

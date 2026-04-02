@@ -1,93 +1,42 @@
 # FireInvent
 
-Webbasierte Inventarisierungs- und Vermietungsloesung.
+Webbasierte Inventarisierungs- und Vermietungsloesung fuer Feuerwehr.
 
-## Struktur
+## Primary Documentation Entry Point
 
-- `frontend/`: Next.JS fuer Inventar-, Vermietungs- und Kalenderansichten
-- `backend/`: .NET 10 mit Swagger / OpenAPI Spec & Entity Framework 
-- `shared/`: API-Kontrakte und geteilte Typen
-- `openspec/`: Anforderungen, Design und Tasks
+Diese Datei ist der zentrale Einstieg. Detaillierte Inhalte liegen in den unten verlinkten, autoritativen Dokumenten.
 
-### Zielstruktur (Task 1.1)
+### Documentation Index
 
-```text
-frontend/
-  src/
-    app/
-      inventory/
-      rentals/
-      calendar/
-    components/
-    lib/
-      api/
-        generated/
-backend/
-  src/
-    FireInvent.Api/
-      Controllers/
-      Contracts/
-      Domain/
-      Infrastructure/
-  tests/
-shared/
-  api-contract.md
-```
+- Projekt und Navigation: [docs/documentation-governance.md](docs/documentation-governance.md)
+- Backend Setup und Betrieb: [backend/README.md](backend/README.md)
+- Frontend Setup und API-Client-Nutzung: [frontend/README.md](frontend/README.md)
+- API-Vertrag und API-first Regeln: [shared/api-contract.md](shared/api-contract.md)
+- Deployment, Health Checks und Recovery: [docs/operations-runbook.md](docs/operations-runbook.md)
+- Troubleshooting Playbook: [docs/operations-runbook.md#troubleshooting-playbook](docs/operations-runbook.md#troubleshooting-playbook)
+- Beitragenden-Workflow (OpenSpec, Tests, Doku-Pflege): [docs/contributing.md](docs/contributing.md)
 
-Konventionen:
-- API-first: Backend publiziert OpenAPI als Vertragsquelle.
-- Frontend nutzt nur generierte API-Clients aus `frontend/src/lib/api/generated/`.
-- JSON-Feldnamen bleiben uebergreifend in camelCase.
-- Breaking API-Aenderungen erfordern OpenAPI-Update und Client-Regenerierung.
+## Repository Structure
 
-## API-Konventionen
+- `frontend/`: Next.js App Router UI und generierter API-Client
+- `backend/`: ASP.NET Core API, OpenAPI-Quelle, EF Core
+- `shared/`: API-Vertragsdokumentation
+- `openspec/`: Changes, Specs, Design und Tasks
+- `docs/`: Governance, Beitragendenprozess und Betriebs-Runbooks
 
-- Ressourcenorientierte Endpunkte unter `/api`
-- JSON Payloads mit camelCase
-- Fehlerformat:
-  - `code`: maschinenlesbarer Fehlercode
-  - `message`: lesbare Fehlermeldung
-  - `details`: optionale Validierungsdetails
-- OpenAPI dient als Single Source of Truth fuer Request-/Response-Vertraege
-- Frontend-Client wird aus OpenAPI generiert, nicht manuell gepflegt
+## Quick Start
 
-## Lokaler Start
+1. Backend nach [backend/README.md](backend/README.md) konfigurieren und starten.
+2. Frontend nach [frontend/README.md](frontend/README.md) starten.
+3. API-first Workflow fuer Vertragsaenderungen nach [shared/api-contract.md](shared/api-contract.md) ausfuehren.
+4. Fuer containerisierten Betrieb und Diagnostik [docs/operations-runbook.md](docs/operations-runbook.md) verwenden.
 
-1. Backend-Konfiguration in `appsettings.Development.json` und/oder User Secrets setzen.
-2. In `backend/` NuGet-Pakete wiederherstellen und Entity-Framework-Migrationen ausfuehren.
-3. In `frontend/` Abhaengigkeiten installieren und Next.js Dev-Server starten.
+## Coolify Exposure Model
 
-## Docker Compose Workflows (Task 6.6)
+Fuer Deployments mit [docker-compose.coolify.yml](docker-compose.coolify.yml) ist nur das Frontend oeffentlich erreichbar. Backend und Datenbank bleiben ohne oeffentliche Port- oder Domain-Freigabe ausschliesslich intern erreichbar.
 
-Der Full-Stack kann containerisiert mit Frontend, Backend und PostgreSQL gestartet werden.
+## Authoritative Sources Policy
 
-Voraussetzung:
-
-- Docker Engine mit Compose v2
-
-Start (Build + Run):
-
-1. `docker compose up --build -d`
-2. Frontend: `http://localhost:3000`
-3. Backend: `http://localhost:5153`
-
-Logs anzeigen:
-
-- `docker compose logs -f`
-
-Stoppen (Container bleiben erhalten):
-
-- `docker compose down`
-
-Reset (Container + Datenbank-Volume entfernen):
-
-- `docker compose down -v`
-
-Optionale Umgebungsvariablen (mit Defaults aus `docker-compose.yml`):
-
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `ASPNETCORE_ENVIRONMENT`
-- `FIREINVENT_SEED_MODE`
-- `NEXT_PUBLIC_API_BASE_URL`
+- Wiederverwendete Anleitungstexte (Setup, API-Workflow, Deployment, Troubleshooting) werden nur an einer Stelle gepflegt.
+- Sekundaere Dokumente verlinken auf die autoritative Quelle statt Inhalte zu duplizieren.
+- Ownership, Review-Kriterien und Definition of Done stehen in [docs/documentation-governance.md](docs/documentation-governance.md).

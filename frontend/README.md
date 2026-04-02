@@ -1,57 +1,56 @@
-# Frontend (Next.JS)
+# Frontend (Next.js)
 
-Task 1.3 liefert die Basis-Dependencies fuer:
+Autoritative Frontend-Dokumentation fuer lokale Entwicklung, Tests und OpenAPI-Client-Nutzung.
 
-- Routing: Next.JS App Router (`src/app`)
-- Data Fetching: `@tanstack/react-query` + `axios`
-- Forms: `react-hook-form` + `zod`
-- Kalenderdarstellung: `@fullcalendar/react` + DayGrid/TimeGrid/Interaction
+## Documentation Navigation
 
-Generierter API-Client wird unter `src/lib/api/generated/` erwartet.
+- Zentraler Projekteinstieg: [../README.md](../README.md)
+- API-first Vertragsprozess: [../shared/api-contract.md](../shared/api-contract.md)
+- Deployment und Recovery: [../docs/operations-runbook.md](../docs/operations-runbook.md)
+- Contribution und DoD-Regeln: [../docs/contributing.md](../docs/contributing.md)
 
-## OpenAPI Client-Generierung (Task 1.5)
+## Stack
 
-Tooling:
+- Next.js App Router (`src/app`)
+- React 19
+- React Query + Axios
+- React Hook Form + Zod
+- FullCalendar
 
-- Generator: `openapi-typescript-codegen`
-- HTTP-Client im generierten Code: `axios`
-- Output-Verzeichnis: `src/lib/api/generated/`
+## Local Setup
 
-Generierung aus lokal laufendem Backend:
+1. `npm install`
+2. `npm run dev`
+3. App unter `http://localhost:3000` aufrufen
 
-- `npm run generate:api-client`
+Falls notwendig API-Basis setzen:
 
-Alternative OpenAPI-Quelle (z. B. Datei oder andere URL):
+- Bash: `NEXT_PUBLIC_API_BASE_URL=http://localhost:5153 npm run dev`
+- PowerShell: `$env:NEXT_PUBLIC_API_BASE_URL='http://localhost:5153'; npm run dev`
 
-- Bash: `OPENAPI_SPEC_URL=http://localhost:5153/openapi/v1.json npm run generate:api-client`
-- PowerShell: `$env:OPENAPI_SPEC_URL='http://localhost:5153/openapi/v1.json'; npm run generate:api-client`
+## API Client Generation
 
-Konventionen:
+Normativer Gesamtprozess steht in [../shared/api-contract.md](../shared/api-contract.md).
 
-- Verzeichnis `src/lib/api/generated/` nicht manuell bearbeiten.
-- API-Aenderungen im Backend erfordern Client-Regenerierung vor Frontend-Implementierung.
+- Standard: `npm run generate:api-client`
+- Alternative OpenAPI-Quelle:
+	- Bash: `OPENAPI_SPEC_URL=http://localhost:5153/openapi/v1.json npm run generate:api-client`
+	- PowerShell: `$env:OPENAPI_SPEC_URL='http://localhost:5153/openapi/v1.json'; npm run generate:api-client`
 
-## Contract-Sync-Check (Task 5.6)
+Regeln:
 
-Das Frontend enthaelt einen automatischen Check, der den API-Client gegen die aktuelle OpenAPI-Datei prueft.
+- `src/lib/api/generated/` nicht manuell bearbeiten.
+- API-Aenderungen werden erst nach Regenerierung und Sync-Check als abgeschlossen betrachtet.
 
-Voraussetzung:
+## Validation Commands
 
-- `backend/openapi/openapi.v1.json` ist vorhanden und aktuell (z. B. nach Export im Backend).
+- Unit Tests: `npm run test:unit`
+- Build: `npm run build`
+- Contract Sync: `npm run check:api-contract-sync`
 
-Ausfuehrung:
+Der Contract-Sync-Check regeneriert den Client und bricht bei Drift gegenueber dem committed Stand ab.
 
-- `npm run check:api-contract-sync`
+## Troubleshooting Links
 
-Was der Check macht:
-
-1. Generiert den Client mit `scripts/generate-api-client.mjs` neu.
-2. Vergleicht das generierte Ergebnis unter `src/lib/api/generated/` via Git-Diff.
-3. Schlaegt fehl, wenn ungecommitte Drift im generierten Client erkannt wird.
-
-Typischer Ablauf bei API-Aenderungen:
-
-1. OpenAPI-Datei im Backend aktualisieren/exportieren.
-2. `npm run generate:api-client` ausfuehren.
-3. Generierte Aenderungen committen.
-4. Optional lokal mit `npm run check:api-contract-sync` gegenpruefen.
+- Container-/Service-Stoerungen: [../docs/operations-runbook.md#troubleshooting-playbook](../docs/operations-runbook.md#troubleshooting-playbook)
+- API-Contract-Drift: [../shared/api-contract.md#contract-drift-recovery](../shared/api-contract.md#contract-drift-recovery)

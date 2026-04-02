@@ -9,7 +9,7 @@ APP_URLS="${OPENAPI_APP_URLS:-http://localhost:5153}"
 
 mkdir -p "$(dirname "$OUTPUT_PATH")"
 
-ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS="$APP_URLS" \
+ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS="$APP_URLS" FIREINVENT_DISABLE_HTTPS_REDIRECTION=true \
   dotnet run --project "$PROJECT_PATH" > "$ROOT_DIR/openapi/export-openapi.log" 2>&1 &
 APP_PID=$!
 
@@ -26,7 +26,7 @@ for i in {1..30}; do
     echo "OpenAPI exported to $OUTPUT_PATH"
     exit 0
   fi
-  sleep 1
+  sleep 2
 done
 
 echo "Failed to fetch OpenAPI document from $URL"

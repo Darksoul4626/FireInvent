@@ -7,6 +7,7 @@ on:
 jobs:
   export-openapi:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: backend
@@ -23,13 +24,18 @@ jobs:
       - name: Restore backend
         run: dotnet restore src/FireInvent.Api/FireInvent.Api.csproj
 
-      - name: Run backend
-        run: FIREINVENT_DB_PROVIDER=inmemory dotnet run --project src/FireInvent.Api/FireInvent.Api.csproj
-
       - name: Export OpenAPI document
         run: |
           chmod +x scripts/export-openapi.sh
-          ./scripts/export-openapi.sh
+          FIREINVENT_DB_PROVIDER=inmemory ./scripts/export-openapi.sh
+
+      - name: Show OpenAPI export log on failure
+        if: failure()
+        run: |
+          if [ -f openapi/export-openapi.log ]; then
+            echo "--- backend/openapi/export-openapi.log ---"
+            cat openapi/export-openapi.log
+          fi
 
       - name: Verify OpenAPI output exists
         run: test -s openapi/openapi.v1.json

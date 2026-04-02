@@ -148,5 +148,5 @@ try {
   );
   process.exit(1);
 } finally {
-  // rmSync(tempRoot, { recursive: true, force: true });
+  rmSync(tempRoot, { recursive: true, force: true });
 }

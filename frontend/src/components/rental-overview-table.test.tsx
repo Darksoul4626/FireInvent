@@ -42,7 +42,7 @@ describe("RentalOverviewTable", () => {
                 } as Response;
             }
 
-            if (url.startsWith("/api/proxy/rentals/overview")) {
+            if (url.startsWith("/api/proxy/rentals?") && url.includes("overview=true")) {
                 return {
                     ok: true,
                     json: async () => ({
@@ -93,7 +93,7 @@ describe("RentalOverviewTable", () => {
 
         const overviewRequest = fetchMock.mock.calls
             .map(([input]) => String(input))
-            .find((url) => url.startsWith("/api/proxy/rentals/overview"));
+            .find((url) => url.startsWith("/api/proxy/rentals?") && url.includes("overview=true"));
 
         expect(overviewRequest).toBeDefined();
         expect(overviewRequest).not.toContain("sortBy=");
@@ -127,7 +127,7 @@ describe("RentalOverviewTable", () => {
         expect(firstRowBeforeSort).toHaveTextContent("Zulu");
 
         const initialOverviewRequests = fetchMock.mock.calls.filter(([input]) =>
-            String(input).startsWith("/api/proxy/rentals/overview")
+            String(input).startsWith("/api/proxy/rentals?") && String(input).includes("overview=true")
         ).length;
 
         await user.click(screen.getByTestId("rentals-table-sort-itemSummary"));
@@ -136,7 +136,7 @@ describe("RentalOverviewTable", () => {
         expect(firstRowAfterSort).toHaveTextContent("Alpha");
 
         const overviewRequestsAfterSort = fetchMock.mock.calls.filter(([input]) =>
-            String(input).startsWith("/api/proxy/rentals/overview")
+            String(input).startsWith("/api/proxy/rentals?") && String(input).includes("overview=true")
         ).length;
 
         expect(overviewRequestsAfterSort).toBe(initialOverviewRequests);

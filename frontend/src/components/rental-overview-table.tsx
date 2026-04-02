@@ -193,7 +193,9 @@ export function RentalOverviewTable() {
                     query.set("to", `${to}T23:59:59.999Z`);
                 }
 
-                const response = await fetch(`/api/proxy/rentals/overview?${query.toString()}`, {
+                query.set("overview", "true");
+
+                const response = await fetch(`/api/proxy/rentals?${query.toString()}`, {
                     signal: controller.signal
                 });
 

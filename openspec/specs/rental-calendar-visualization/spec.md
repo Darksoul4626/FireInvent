@@ -3,12 +3,16 @@ Define how rental periods are visualized in calendar and fallback list/table vie
 
 ## Requirements
 
-### Requirement: Rental periods shall be visible in a calendar interface
-The system SHALL provide a calendar and fallback list/table view that include all relevant rental lifecycle statuses including `Returned` and `Completed`.
+### Requirement: Rental periods shall be visible in the existing FullCalendar interface
+The system SHALL keep the FullCalendar-based calendar interface and SHALL present calendar/list entries for operationally relevant rental statuses.
 
-#### Scenario: Display returned and completed rentals distinctly
-- **WHEN** a user views rental entries in calendar or fallback table/list
-- **THEN** the system MUST present `Returned` and `Completed` with clearly distinguishable status cues
+#### Scenario: FullCalendar interaction model remains available
+- **WHEN** a user opens the rental calendar
+- **THEN** the system MUST provide the existing FullCalendar-driven month/week/day interaction model
+
+#### Scenario: Calendar focuses on operational statuses
+- **WHEN** a user views rental entries in calendar or fallback list/table
+- **THEN** the system MUST focus visible entries on `Planned` and `Active` statuses
 
 ### Requirement: Test-targeted calendar UI elements shall expose data-testid attributes
 The system SHALL provide stable `data-testid` attributes on calendar filter and table/list elements targeted by automated tests.
@@ -28,9 +32,9 @@ The system SHALL present calendar controls, legends, and fallback table/list ele
 - **WHEN** dense data triggers or user selects table/list fallback view
 - **THEN** fallback presentation MUST follow the same spacing and status styling language as other data-heavy pages
 
-### Requirement: Calendar display shall remain legible in light and dark mode
-The system SHALL ensure rental status and conflict emphasis are readable in both themes.
+### Requirement: Calendar view shall not expose conflict status cues
+The system SHALL not render `Conflict` as a calendar-visible status, legend badge, or row-level cue.
 
-#### Scenario: Conflict visibility in both themes
-- **WHEN** a conflicting rental entry is displayed
-- **THEN** conflict emphasis MUST remain clearly distinguishable in light and dark modes
+#### Scenario: Conflict cue removal in calendar and fallback list/table
+- **WHEN** rental entries are rendered in calendar or fallback list/table
+- **THEN** no conflict-specific status label, badge, or highlight MUST be shown

@@ -179,7 +179,9 @@ export function InventoryOverviewTable() {
                     query.set("condition", condition);
                 }
 
-                const response = await fetch(`/api/proxy/items/overview?${query.toString()}`, {
+                query.set("overview", "true");
+
+                const response = await fetch(`/api/proxy/items?${query.toString()}`, {
                     signal: controller.signal
                 });
 

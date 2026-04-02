@@ -23,6 +23,9 @@ jobs:
       - name: Restore backend
         run: dotnet restore src/FireInvent.Api/FireInvent.Api.csproj
 
+      - name: Run backend
+        run: FIREINVENT_DB_PROVIDER=inmemory dotnet run --project src/FireInvent.Api/FireInvent.Api.csproj
+
       - name: Export OpenAPI document
         run: |
           chmod +x scripts/export-openapi.sh

@@ -122,6 +122,9 @@ if (!disableHttpsRedirection)
 {
     app.UseHttpsRedirection();
 }
+
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+
 app.MapControllers();
 
 await app.RunAsync();

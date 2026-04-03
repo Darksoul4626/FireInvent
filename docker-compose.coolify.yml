@@ -30,7 +30,7 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       FIREINVENT_DISABLE_HTTPS_REDIRECTION: "true"
       FIREINVENT_SEED_MODE: ${FIREINVENT_SEED_MODE:-none}
-      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${SERVICE_PASSWORD_DB}
     depends_on:
       db:
         condition: service_healthy
